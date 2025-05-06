@@ -1,0 +1,197 @@
+<?php
+include '../backend/auth.php';
+include '../layout/imports.php';
+
+// Conexão com o banco de dados
+$host = 'localhost';
+$dbname = 'axel_db';
+$username = 'root';
+$password = '';
+
+$conn = new mysqli($host, $username, $password, $dbname);
+if ($conn->connect_error) {
+    die("Conexão falhou: " . $conn->connect_error);
+}
+
+// Obter o ID da empresa do usuário logado
+$empresa_id = $_SESSION['empresa_id'];
+
+// Recuperar status
+$status_sql = "SELECT * FROM status ORDER BY id";
+$status_result = $conn->query($status_sql);
+
+// Recuperar projetos da empresa específica
+$projetos_sql = "SELECT p.*, s.nome AS status_nome 
+                 FROM projetos p 
+                 LEFT JOIN status s ON p.status_fk = s.id 
+                 WHERE p.empresa_id = ?"; // Filtra pelo ID da empresa
+
+$stmt = $conn->prepare($projetos_sql);
+$stmt->bind_param("i", $empresa_id); // Bind do parâmetro empresa_id
+$stmt->execute();
+$projetos_result = $stmt->get_result();
+
+// Organizar projetos por status
+$projetos_por_status = [];
+while ($projeto = $projetos_result->fetch_assoc()) {
+    $projetos_por_status[$projeto['status_fk']][] = $projeto;
+}
+
+// Debug: Verifique se os projetos estão sendo organizados corretamente
+// var_dump($projetos_por_status);
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Projetos em Andamento</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+
+
+    <style>
+        * {
+            font-family: "Poppins", sans-serif;
+            font-style: normal;
+        }
+    </style>
+
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#171717', // blue-500
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-[#F2F4F7] min-h-screen flex">
+    <!-- Side Menu -->
+    <?php include '../layout/sidemenu.php'; ?>
+
+    <div class="flex-1 p-8 space-y-8">
+        <!-- Cabeçalho -->
+        <div class="flex flex-row justify-between items-center justify-center shadow  bg-[#FFFFFF] py-4 px-6 rounded-2xl ">
+            <div class="">
+                <h1 class="text-3xl font-bold text-primary">Quadro de Projetos</h1>
+            </div>
+
+            <button onclick="document.getElementById('modal-status').classList.remove('hidden')" class="bg-primary text-white px-4 py-2 rounded">+ Novo Quadro</button>
+
+        </div>
+
+        <!-- Tabela -->
+        <div class="flex space-x-4 overflow-x-scroll ">
+            <?php while ($status = $status_result->fetch_assoc()): ?>
+                <div class="w-64 bg-white rounded-lg shadow p-4" style="background: <?= htmlspecialchars($status['cor']) ?>;">
+                    <h2 class="text-lg font-bold mb-4">
+                        <?= htmlspecialchars($status['nome']) ?>
+                    </h2>
+                    <div class="space-y-2 min-h-[100px]" data-status-id="<?= $status['id'] ?>" ondrop="drop(event)" ondragover="allowDrop(event)">
+                        <?php
+                        // Garantir que há projetos para este status
+                        $projetos = $projetos_por_status[$status['id']] ?? [];
+                        foreach ($projetos as $projeto):
+                        ?>
+                            <!-- Adicionando o evento ondbclick para abrir a página de detalhes -->
+                            <div class="bg-gray-100 p-3 rounded shadow cursor-pointer" draggable="true" ondragstart="drag(event)" id="projeto-<?= $projeto['id'] ?>" ondblclick="window.location.href='../projetos/detalhes.php?projeto_id=<?= $projeto['id'] ?>'">
+                                <p class="font-semibold"><?= htmlspecialchars($projeto['nome']) ?></p>
+                                <p class="text-sm text-gray-600">Responsável: <?= htmlspecialchars($projeto['responsavel']) ?></p>
+                            </div>
+                        <?php endforeach; ?>
+
+                        <!-- Caso não tenha projetos, exibir uma mensagem -->
+                        <?php if (empty($projetos)): ?>
+                            <p class="text-gray-500 text-sm">Nenhum projeto encontrado</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endwhile; ?>
+        </div>
+
+
+
+
+        <script>
+            let projetoArrastado = null;
+
+            function drag(event) {
+                projetoArrastado = event.target;
+                event.dataTransfer.setData("text/plain", event.target.id);
+            }
+
+            function allowDrop(event) {
+                event.preventDefault();
+            }
+
+            function drop(event) {
+                event.preventDefault();
+                const statusId = event.currentTarget.getAttribute('data-status-id');
+                event.currentTarget.appendChild(projetoArrastado);
+
+                const projetoId = projetoArrastado.id.replace('projeto-', '');
+
+                // Atualizar o status do projeto via AJAX
+                fetch('./atualizar_status.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            projeto_id: projetoId,
+                            status_id: statusId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.sucesso) {
+                            alert('Erro ao atualizar o status do projeto.');
+                        }
+                    });
+            }
+        </script>
+
+        <!-- Modal Novo Projeto -->
+        <div id="modal-status" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+            <div class="bg-white p-6 rounded shadow-lg">
+                <h2 class="text-xl font-bold mb-4">Novo Status</h2>
+                <form method="POST" action="./criar_quadro.php">
+                    <label class="block mb-2">Nome do Status</label>
+                    <input type="text" name="nome" required class="border p-2 w-full mb-4">
+
+                    <label class="block mb-2">Cor</label>
+                    <input type="color" name="cor" value="#171717" class="border p-2 w-full mb-4">
+
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" onclick="document.getElementById('modal-status').classList.add('hidden')" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+
+    </div>
+
+
+
+    <style>
+        .input {
+            @apply w-full p-3 bg-dark border border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent;
+        }
+    </style>
+
+</body>
+
+</html>
+
+<?php $conn->close(); ?>

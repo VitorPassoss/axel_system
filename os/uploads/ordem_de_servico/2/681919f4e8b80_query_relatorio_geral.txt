@@ -1,0 +1,13 @@
+SELECT 
+    COUNT(CASE WHEN ps.active = true THEN 1 END) AS plansActives,
+    COUNT(CASE WHEN ps.active = false THEN 1 END) AS plansInactives,
+    COUNT(client.id) AS allClients,
+    COUNT(CASE WHEN wt.actual_value = 0 OR wt.actual_value IS NULL THEN 1 END) AS withoutAmount,
+    COUNT(CASE WHEN wt.actual_value > 0 THEN 1 END) AS withAmount
+FROM 
+    app.client AS client
+left JOIN 
+    app.plan_subscription AS ps ON ps.id_client = client.id
+left JOIN 
+    app.wallet_track wt ON wt.id_client = client.id
+ 

@@ -1,0 +1,32 @@
+<?php
+header('Content-Type: application/json');
+
+$host = 'localhost';
+$dbname = 'axel_db';
+$username = 'root';
+$password = '';
+
+$conn = new mysqli($host, $username, $password, $dbname);
+
+if ($conn->connect_error) {
+    echo json_encode(['success' => false, 'message' => 'Erro de conexão com o banco de dados.']);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
+    $id = intval($_POST['id']);
+
+    $stmt = $conn->prepare("DELETE FROM empresas WHERE id = ?");
+    $stmt->bind_param("i", $id);
+
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Erro ao excluir.']);
+    }
+
+    $stmt->close();
+    $conn->close();
+} else {
+    echo json_encode(['success' => false, 'message' => 'Requisição inválida.']);
+}
