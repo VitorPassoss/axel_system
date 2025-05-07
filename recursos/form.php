@@ -48,6 +48,30 @@ while ($row = $resultProjetos->fetch_assoc()) {
 }
 
 
+$ordensComObra = [];
+
+$query = "
+  SELECT 
+    os.id AS os_id,
+    os.status,
+    o.id AS obra_id,
+    o.nome AS obra_nome,
+    o.endereco AS obra_endereco
+  FROM ordem_de_servico os
+  JOIN obras o ON os.obra_id = o.id
+  WHERE os.empresa_id = ?
+";
+
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $empresa_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+while ($row = $result->fetch_assoc()) {
+    $ordensComObra[] = $row;
+}
+
+
 ?>
 
 
@@ -106,65 +130,49 @@ while ($row = $resultProjetos->fetch_assoc()) {
             <form method="POST" enctype="multipart/form-data" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                    <div class="flex flex-col">
-                        <label for="fornecedor" class="text-gray-700 mb-1 text-sm font-medium">Fornecedor</label>
-                        <input type="text" id="fornecedor" name="fornecedor" required
-                            value="<?= htmlspecialchars($solicitacao['fornecedor'] ?? '') ?>"
-                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
-                    </div>
 
-                    <div class="flex flex-col">
-                        <label for="valor" class="text-gray-700 mb-1 text-sm font-medium">Valor</label>
-                        <input type="number" step="0.01" id="valor" name="valor" required
-                            value="<?= htmlspecialchars($solicitacao['valor'] ?? '') ?>"
-                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
-                    </div>
-
-                    <div class="flex flex-col">
-                        <label for="obra_id" class="text-gray-700 mb-1 text-sm font-medium">Obra (opcional)</label>
-                        <select id="obra_id" name="obra_id"
-                            class="w-full rounded-lg border border-gray-300 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-3">
-                            <option value="">Selecione</option>
-                            <?php foreach ($obras as $obra): ?>
-                                <option value="<?= $obra['id'] ?>" <?= (isset($solicitacao['obra_id']) && $solicitacao['obra_id'] == $obra['id']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($obra['nome']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="flex flex-col">
-                        <label for="projeto_id" class="text-gray-700 mb-1 text-sm font-medium">Projeto (opcional)</label>
-                        <select id="projeto_id" name="projeto_id"
-                            class="w-full rounded-lg border border-gray-300 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-3">
-                            <option value="">Selecione</option>
-                            <?php foreach ($projetos as $projeto): ?>
-                                <option value="<?= $projeto['id'] ?>" <?= (isset($solicitacao['projeto_id']) && $solicitacao['projeto_id'] == $projeto['id']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($projeto['nome']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="flex flex-col">
-                        <label for="status" class="text-gray-700 mb-1 text-sm font-medium">Status</label>
-                        <select id="status" name="status"
-                            class="w-full rounded-lg border border-gray-300 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-3">
-                            <?php
-                            $status_options = ['PENDENTE', 'APROVADO', 'REJEITADO', 'PAGO', 'COTAÇÃO'];
-                            foreach ($status_options as $status) {
-                                $selected = (isset($solicitacao['status']) && $solicitacao['status'] == $status) ? 'selected' : '';
-                                echo "<option value=\"$status\" $selected>$status</option>";
-                            }
-                            ?>
-                        </select>
-                    </div>
 
                     <div class="flex flex-col md:col-span-2">
-                        <label for="descricao" class="text-gray-700 mb-1 text-sm font-medium">Descrição</label>
+                        <label for="descricao" class="text-gray-700 mb-1 text-sm font-medium">Selecione os itens</label>
                         <textarea id="descricao" name="descricao" rows="4"
                             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100"><?= htmlspecialchars($solicitacao['descricao'] ?? '') ?></textarea>
                     </div>
+
+
+                    <div class="flex flex-col">
+                        <label for="numero_os" class="text-gray-700 mb-1 text-sm font-medium">Und de Medida</label>
+                        <input type="number" step="0.01" id="numero_os" name="numero_os" required
+                            value="<?= htmlspecialchars($os['numero_os'] ?? '') ?>"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
+                    </div>
+
+
+
+                    <!-- Quantidade -->
+
+
+
+                    <!-- Unidade de Medida -->
+                    <div class="flex flex-col">
+                        <label for="numero_os" class="text-gray-700 mb-1 text-sm font-medium">Quantidade</label>
+                        <input type="number" step="0.01" id="numero_os" name="numero_os" required
+                            value="<?= htmlspecialchars($os['numero_os'] ?? '') ?>"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label for="ordem_servico_id" class="text-gray-700 mb-1 text-sm font-medium">Selecione uma Ordem de Serviço</label>
+                        <select id="ordem_servico_id" name="ordem_servico_id"
+                            class="w-full rounded-lg border border-gray-300 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 p-3">
+                            <option value="">Selecione</option>
+                            <?php foreach ($ordensComObra as $ordem): ?>
+                                <option value="<?= $ordem['os_id'] ?>">
+                                   Numero Os: <?= htmlspecialchars($ordem['os_id']) ?> — <?= htmlspecialchars($ordem['obra_nome']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
 
                     <div class="flex flex-col md:col-span-2">
                         <label for="anexos" class="text-gray-700 mb-1 text-sm font-medium">Anexos</label>

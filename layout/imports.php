@@ -7,3 +7,5 @@
 
 <!-- Toastify JS -->
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+<link rel="icon" type="image/png" href="../assets/logo/il_fullxfull.2974258879_pxm3.webp">

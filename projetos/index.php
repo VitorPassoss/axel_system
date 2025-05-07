@@ -87,6 +87,12 @@ $result = $stmt->get_result();
 
     </div>
 
+
+    <button onclick="window.location.href='../quadro'" class="mt-4 flex items-center gap-2 bg-white py-2 px-6 rounded-lg font-semibold border border-gray-300 hover:bg-gray-100 text-gray-800 transition">
+      <i class="fas fa-th-large text-gray-600"></i>
+      Visualizar Quadro
+    </button>
+
     <!-- Tabela -->
     <div class="overflow-x-auto  rounded-lg shadow-lg bg-white">
       <table class="min-w-full divide-y divide-gray-200">

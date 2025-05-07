@@ -24,7 +24,7 @@ $empresas = $conn->query("SELECT id, nome FROM empresas");
 
 // Consulta de obras da empresa logada (ou da empresa filtrada, se houver)
 $empresa_para_obras = !empty($filtro_empresa) ? intval($filtro_empresa) : $empresa_id_sessao;
-$obras = $conn->query("SELECT id, nome FROM obras WHERE empresa_id = $empresa_para_obras");
+$obras = $conn->query("SELECT * FROM ordem_de_servico WHERE empresa_id = $empresa_para_obras");
 
 // Montagem do WHERE dinâmico
 $where = "WHERE sc.empresa_id = ?";
@@ -45,21 +45,20 @@ if (!empty($filtro_obra)) {
 // Consulta final com joins
 $sql = "
 SELECT 
-    sc.*, 
-    p.nome AS nome_projeto,
-    o.nome AS nome_obra
+    sc.*,
+    e.nome AS nome_empresa
 FROM 
     solicitacao_compras sc
-LEFT JOIN 
-    projetos p ON sc.projeto_id = p.id
-LEFT JOIN 
-    obras o ON sc.obra_id = o.id
-$where
-ORDER BY sc.id DESC
+JOIN 
+    empresas e ON e.id = sc.empresa_id
+WHERE 
+    sc.empresa_id = ?
+ORDER BY 
+    sc.id DESC
 ";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param($types, ...$params);
+$stmt->bind_param("i", $empresa_id_sessao);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
@@ -133,30 +132,6 @@ $result = $stmt->get_result();
             </select>
           </div>
         </div>
-
-        <!-- Filtro de Obra -->
-        <div class="flex items-center gap-2">
-          <div>
-            <i class="fas fa-hammer text-gray-500"></i> <!-- Ícone de obra -->
-            <label for="obra_id" class="text-sm font-medium text-gray-700">Obra</label>
-            <select name="obra_id" id="obra_id" class="mt-1 p-2 block mt-2 w-full sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-              <option value="">Todas</option>
-              <?php while ($obra = $obras->fetch_assoc()) { ?>
-                <option value="<?= $obra['id'] ?>" <?= $filtro_obra == $obra['id'] ? 'selected' : '' ?>>
-                  <?= htmlspecialchars($obra['nome']) ?>
-                </option>
-              <?php } ?>
-            </select>
-          </div>
-
-          <div class="flex items-center py-4 ">
-            <button type="submit" class="flex items-center bg-black mt-7 ml-4 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50">
-              <i class="fas fa-filter mr-2"></i> <!-- Ícone de filtro -->
-              Filtrar
-            </button>
-          </div>
-        </div>
-
         <!-- Botão de Filtro -->
 
       </form>
@@ -164,11 +139,10 @@ $result = $stmt->get_result();
       <table class="min-w-full divide-y divide-gray-200">
         <thead>
           <tr class="">
-            <th class="px-6 py-3 text-left text-sm uppercase">Descrição</th>
+            <th class="px-6 py-3 text-left text-sm uppercase">Solicitante</th>
             <th class="px-6 py-3 text-left text-sm uppercase">Status</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Razão</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Valor</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Fornecedor</th>
+            <th class="px-6 py-3 text-left text-sm uppercase">Valor Total</th>
+            <th class="px-6 py-3 text-left text-sm uppercase">Grau</th>
             <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
 
           </tr>
@@ -176,7 +150,7 @@ $result = $stmt->get_result();
         <tbody class="divide-y divide-gray-200">
           <?php while ($row = $result->fetch_assoc()) { ?>
             <tr class="hover:bg-gray-100">
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['descricao']); ?></td>
+              <td class="px-6 py-4"><?php echo htmlspecialchars($row['solicitante']); ?></td>
 
 
               <?php
@@ -196,19 +170,9 @@ $result = $stmt->get_result();
                   <?= $status ?>
                 </span>
               </td>
-              <td class="px-6 py-4">
-                <?php
-                if (!empty($row['nome_projeto'])) {
-                  echo htmlspecialchars($row['nome_projeto']);
-                } elseif (!empty($row['nome_obra'])) {
-                  echo htmlspecialchars($row['nome_obra']);
-                } else {
-                  echo '—';
-                }
-                ?>
-              </td>
-              <td class="px-6 py-4">R$ <?php echo number_format($row['valor'], 2, ',', '.'); ?></td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['fornecedor']); ?></td>
+              <td class="px-6 py-4"><?php echo htmlspecialchars($row['valor']); ?></td>
+
+              <td class="px-6 py-4"><?php echo htmlspecialchars($row['grau']); ?></td>
 
               <td class="px-6 py-4 text-center">
                 <button onclick="visualizarProjeto(<?php echo $row['id']; ?>)" class=" hover:underline ml-2">

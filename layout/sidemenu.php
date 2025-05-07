@@ -15,6 +15,7 @@
     top: 0;
     left: 0;
     z-index: 30;
+    width: 16.5%;
   }
 
   #sideMenu li {
@@ -30,30 +31,42 @@
       backdrop-filter: none;
     }
 
-    .toggle-btn {
-      display: none;
-    }
+
   }
 
   #sideMenu a:hover i {
-  color: #2B3A4B !important;
-}
+    color: #2B3A4B !important;
+  }
 
 
   body {
     margin-left: 16%;
   }
+
+
+  @media (max-width: 768px) {
+    .side-menu {
+      transform: translateX(0);
+      left: 0;
+      position: fixed;
+      height: 100vh;
+      backdrop-filter: none;
+      display: none;
+    }
+    body {
+    margin-left: 0%;
+  }
+
+  }
 </style>
 
-<div id="sideMenu" class="side-menu fixed top-0 left-[-100%] shadow-xl w-64 min-h-screen bg-[#FFFFFF] backdrop-blur-lg p-4 space-y-2 transition-all duration-300 ease-in-out transform rounded-lg z-30">
-  <div class="flex-col justify-between items-center ">
+<div id="sideMenu" class="  side-menu fixed top-0 left-[-100%] shadow-xl w-64 min-h-screen bg-[#FFFFFF] backdrop-blur-lg p-4 space-y-2 transition-all duration-300 ease-in-out transform rounded-lg z-30">
+  <div class="flex justify-between items-center ">
     <div class="flex items-center ">
-      <img class="w-12" src="https://i.etsystatic.com/25290379/r/il/19a886/2974258879/il_fullxfull.2974258879_pxm3.jpg" alt="">
+      <img class="w-12" src="../assets/logo/il_fullxfull.2974258879_pxm3.webp" alt="">
       <h2 class="text-[12px] text-[#2B3A4B] font-bold">Zion Managment</h2>
     </div>
-    <button id="toggleMenu" class="md:hidden text-gray-800">
-      <i class="fas fa-bars text-2xl"></i>
-    </button>
+
   </div>
 
   <div id="menuContent"></div>
@@ -128,7 +141,6 @@
               ${getMenuItem('../Obras', 'fa-solid fa-trowel-bricks', 'Obras')}
               ${getMenuItem('../os', 'fas fa-clipboard-list', 'Ordens de Serviço')}
               ${getMenuItem('../recursos', 'fas fa-shopping-cart', 'Sol. Compras')}
-              ${getMenuItem('../quadro', 'fas fa-clipboard-list', 'Quadro de Projetos')}
             `;
           }
 
@@ -176,21 +188,7 @@
       }
     })
     .catch(error => console.error('Erro:', error));
+
+
+
 </script>
-
-
-
-<style>
-  @media (min-width: 768px) {
-    .side-menu {
-      transform: translateX(0);
-      position: relative;
-      left: 0;
-      backdrop-filter: none;
-    }
-
-    .toggle-btn {
-      display: none;
-    }
-  }
-</style>

@@ -16,30 +16,28 @@ if ($conn->connect_error) {
 // Obter o ID da empresa do usuário logado
 $empresa_id = $_SESSION['empresa_id'];
 
-// Recuperar status
-$status_sql = "SELECT * FROM status ORDER BY id";
+// Recuperar status das obras
+$status_sql = "SELECT * FROM status_obras ORDER BY id";
 $status_result = $conn->query($status_sql);
 
-// Recuperar projetos da empresa específica
-$projetos_sql = "SELECT p.*, s.nome AS status_nome 
-                 FROM projetos p 
-                 LEFT JOIN status s ON p.status_fk = s.id 
-                 WHERE p.empresa_id = ?"; // Filtra pelo ID da empresa
+// Recuperar obras da empresa específica
+$obras_sql = "SELECT o.*, s.nome AS status_nome 
+              FROM obras o 
+              LEFT JOIN status_obras s ON o.status_id = s.id 
+              WHERE o.empresa_id = ?";
 
-$stmt = $conn->prepare($projetos_sql);
-$stmt->bind_param("i", $empresa_id); // Bind do parâmetro empresa_id
+$stmt = $conn->prepare($obras_sql);
+$stmt->bind_param("i", $empresa_id);
 $stmt->execute();
-$projetos_result = $stmt->get_result();
+$obras_result = $stmt->get_result();
 
-// Organizar projetos por status
-$projetos_por_status = [];
-while ($projeto = $projetos_result->fetch_assoc()) {
-    $projetos_por_status[$projeto['status_fk']][] = $projeto;
+// Organizar obras por status
+$obras_por_status = [];
+while ($obra = $obras_result->fetch_assoc()) {
+    $obras_por_status[$obra['status_id']][] = $obra;
 }
-
-// Debug: Verifique se os projetos estão sendo organizados corretamente
-// var_dump($projetos_por_status);
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -82,10 +80,10 @@ while ($projeto = $projetos_result->fetch_assoc()) {
         <div class="flex flex-row justify-between items-center shadow bg-[#FFFFFF] py-4 px-6 rounded-2xl">
 
             <div class="flex items-center gap-4">
-                <button onclick="window.location.href='../projetos'" class="text-gray-600 hover:text-primary transition">
+                <button onclick="window.location.href='../obras'" class="text-gray-600 hover:text-primary transition">
                     <i class="fas fa-arrow-left text-xl"></i>
                 </button>
-                <h1 class="text-3xl font-bold text-primary">Quadro de Projetos</h1>
+                <h1 class="text-3xl font-bold text-primary">Quadro de Obras</h1>
             </div>
 
             <button onclick="document.getElementById('modal-status').classList.remove('hidden')" class="bg-primary text-white px-4 py-2 rounded">
@@ -94,8 +92,7 @@ while ($projeto = $projetos_result->fetch_assoc()) {
 
         </div>
 
-        <!-- Tabela -->
-        <div class="flex space-x-4 overflow-x-auto  px-4 py-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+        <div class="flex space-x-4 overflow-x-auto px-4 py-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
             <?php while ($status = $status_result->fetch_assoc()): ?>
                 <div class="w-[25%] bg-white rounded-lg shadow p-4 flex-shrink-0" style="background: <?= htmlspecialchars($status['cor']) ?>;">
                     <h2 class="text-lg font-bold mb-4">
@@ -103,17 +100,16 @@ while ($projeto = $projetos_result->fetch_assoc()) {
                     </h2>
                     <div class="space-y-2 min-h-[100px]" data-status-id="<?= $status['id'] ?>" ondrop="drop(event)" ondragover="allowDrop(event)">
                         <?php
-                        $projetos = $projetos_por_status[$status['id']] ?? [];
-                        foreach ($projetos as $projeto):
+                        $obras = $obras_por_status[$status['id']] ?? [];
+                        foreach ($obras as $obra):
                         ?>
-                            <div class="bg-gray-100 p-3 rounded shadow cursor-pointer" draggable="true" ondragstart="drag(event)" id="projeto-<?= $projeto['id'] ?>" ondblclick="window.location.href='../projetos/detalhes.php?projeto_id=<?= $projeto['id'] ?>'">
-                                <p class="font-semibold"><?= htmlspecialchars($projeto['nome']) ?></p>
-                                <p class="text-sm text-gray-600">Responsável: <?= htmlspecialchars($projeto['responsavel']) ?></p>
+                            <div class="bg-gray-100 p-3 rounded shadow cursor-pointer" draggable="true" ondragstart="drag(event)" id="obra-<?= $obra['id'] ?>" ondblclick="window.location.href='../projetos/detalhes.php?projeto_id=<?= $obra['id'] ?>'">
+                                <p class="font-semibold"><?= htmlspecialchars($obra['nome']) ?></p>
                             </div>
                         <?php endforeach; ?>
 
-                        <?php if (empty($projetos)): ?>
-                            <p class="text-gray-500 text-sm">Nenhum projeto encontrado</p>
+                        <?php if (empty($obras)): ?>
+                            <p class="text-gray-500 text-sm">Nenhuma obra encontrada</p>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -125,10 +121,10 @@ while ($projeto = $projetos_result->fetch_assoc()) {
 
 
         <script>
-            let obraArrastada = null;
+            let projetoArrastado = null;
 
             function drag(event) {
-                obraArrastada = event.target;
+                projetoArrastado = event.target;
                 event.dataTransfer.setData("text/plain", event.target.id);
             }
 
@@ -139,36 +135,38 @@ while ($projeto = $projetos_result->fetch_assoc()) {
             function drop(event) {
                 event.preventDefault();
                 const statusId = event.currentTarget.getAttribute('data-status-id');
-                event.currentTarget.appendChild(obraArrastada);
 
-                const obraId = obraArrastada.id.replace('obra-', '');
+                console.log(statusId)
 
+                event.currentTarget.appendChild(projetoArrastado);
 
+                const projetoId = projetoArrastado.id.replace('obra-', '');
+
+                // Atualizar o status do projeto via AJAX
                 fetch('./atualizar_status_obra.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            obra_id: obraId,
+                            obra_id: projetoId,
                             status_id: statusId
                         })
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (!data.sucesso) {
-                            alert('Erro ao atualizar o status da obra.');
+                            alert('Erro ao atualizar o status do projeto.');
                         }
                     });
             }
         </script>
 
-
         <!-- Modal Novo Projeto -->
         <div id="modal-status" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
             <div class="bg-white p-6 rounded shadow-lg">
                 <h2 class="text-xl font-bold mb-4">Novo Status</h2>
-                <form method="POST" action="./criar_quadro.php">
+                <form method="POST" action="./criar_quadro_obra.php">
                     <label class="block mb-2">Nome do Status</label>
                     <input type="text" name="nome" required class="border p-2 w-full mb-4">
 

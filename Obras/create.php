@@ -20,12 +20,15 @@ if ($conn->connect_error) {
     die("Conexão falhou: " . $conn->connect_error);
 }
 
+// Verifica se o status existe
+
+
 // Funções de CRUD de Obras
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $_POST['nome'] ?? '';
     $descricao = $_POST['descricao'] ?? '';
     $tipo_obra = $_POST['tipo_obra'] ?? '';
-    $status = $_POST['status'] ?? '';
+    $status = $_POST['status_id'] ?? '';
     $data_inicio = $_POST['data_inicio'] ?? null;
     $data_previsao_fim = $_POST['data_previsao_fim'] ?? null;
     $data_fim = $_POST['data_fim'] ?? null;
@@ -45,7 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $conn->real_escape_string($nome);
     $descricao = $conn->real_escape_string($descricao);
     $tipo_obra = $conn->real_escape_string($tipo_obra);
-    $status = $conn->real_escape_string($status);
     $endereco = $conn->real_escape_string($endereco);
     $cidade = $conn->real_escape_string($cidade);
     $estado = $conn->real_escape_string($estado);
@@ -54,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $responsavel_tecnico = $conn->real_escape_string($responsavel_tecnico);
 
     $sql = "INSERT INTO obras (
-        nome, descricao, tipo_obra, status, data_inicio, data_previsao_fim, data_fim,
+        nome, descricao, tipo_obra, status_id, data_inicio, data_previsao_fim, data_fim,
         custo_real, endereco, cidade, estado, cep, latitude, longitude,
         cliente, responsavel_tecnico, empresa_id, contrato_id, projeto_id
     ) VALUES (

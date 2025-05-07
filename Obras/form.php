@@ -27,6 +27,12 @@ if (isset($_GET['obra_id'])) {
 }
 
 
+$sql = "SELECT * FROM status_obras";
+$stmt = $conn->prepare($sql);
+$stmt->execute();
+$status_obras = $stmt->get_result();
+
+
 ?>
 
 
@@ -90,7 +96,7 @@ if (isset($_GET['obra_id'])) {
             </h2>
 
             <!-- Formulário -->
-            <form method="POST" class="space-y-4" >
+            <form method="POST" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     <!-- Nome da Obra -->
@@ -159,16 +165,16 @@ if (isset($_GET['obra_id'])) {
                     <!-- Status -->
                     <div class="flex flex-col">
                         <label for="status" class="text-gray-700 mb-1 text-sm font-medium">Status</label>
-                        <select id="status" name="status" required
+                        <select id="status" name="status_id" required
                             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                            <option value="Planejada">Planejada</option>
-                            <option value="Em andamento">Em andamento</option>
-                            <option value="Concluída">Concluída</option>
-                            <option value="Suspensa">Suspensa</option>
-                            <option value="Cancelada">Cancelada</option>
+                            <option value="">Selecione o Status</option> <!-- Opção padrão -->
+                            <?php while ($status = $status_obras->fetch_assoc()): ?>
+                                <option value="<?= htmlspecialchars($status['id']) ?>">
+                                    <?= htmlspecialchars($status['nome']) ?>
+                                </option>
+                            <?php endwhile; ?>
                         </select>
                     </div>
-
                     <!-- Contrato -->
                     <div class="flex flex-col">
                         <label for="contrato_id" class="text-gray-700 mb-1 text-sm font-medium">Contrato (Número)</label>

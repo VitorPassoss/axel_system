@@ -138,16 +138,20 @@ if (isset($_GET['obra_id'])) {
 
                     <!-- Status -->
                     <div class="flex flex-col">
-                        <label for="status" class="text-gray-700 mb-1 text-sm font-medium">Status</label>
-                        <select id="status" name="status" required
-                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                            <option value="Planejada" <?= (isset($obra['status']) && $obra['status'] == 'Planejada') ? 'selected' : '' ?>>Planejada</option>
-                            <option value="Em andamento" <?= (isset($obra['status']) && $obra['status'] == 'Em andamento') ? 'selected' : '' ?>>Em andamento</option>
-                            <option value="Concluída" <?= (isset($obra['status']) && $obra['status'] == 'Concluída') ? 'selected' : '' ?>>Concluída</option>
-                            <option value="Suspensa" <?= (isset($obra['status']) && $obra['status'] == 'Suspensa') ? 'selected' : '' ?>>Suspensa</option>
-                            <option value="Cancelada" <?= (isset($obra['status']) && $obra['status'] == 'Cancelada') ? 'selected' : '' ?>>Cancelada</option>
+                        <label for="status_id" class="text-gray-700 mb-1 text-sm font-medium">Status da Obra</label>
+                        <select id="status_id" name="status_id" required
+                            class="w-full rounded-lg border border-gray-300 p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary">
+                            <?php
+                            $status_sql = "SELECT * FROM status_obras";
+                            $status_result = $conn->query($status_sql);
+                            while ($status_row = $status_result->fetch_assoc()) {
+                                $selected = (isset($obra['status_id']) && $obra['status_id'] == $status_row['id']) ? 'selected' : '';
+                                echo '<option value="' . $status_row['id'] . '" ' . $selected . '>' . $status_row['nome'] . '</option>';
+                            }
+                            ?>
                         </select>
                     </div>
+
 
                     <!-- Contrato -->
                     <div class="flex flex-col">

@@ -73,6 +73,29 @@ $resultProjetos = $stmtProjetos->get_result();
 while ($row = $resultProjetos->fetch_assoc()) {
     $projetos[] = $row;
 }
+
+$servicos = [];
+$stmtServicos = $conn->prepare("
+    SELECT 
+        servicos_os.id,
+        servicos.nome,
+        servicos_os.und_do_servico,
+        servicos_os.quantidade,
+        servicos_os.tipo_servico,
+        servicos_os.executor,
+        servicos_os.dt_inicio,
+        servicos_os.dt_final
+    FROM servicos_os
+    INNER JOIN servicos ON servicos.id = servicos_os.servico_id
+    WHERE servicos_os.os_id = ?
+");
+$stmtServicos->bind_param("i", $sc_id);
+$stmtServicos->execute();
+$resultServicos = $stmtServicos->get_result();
+while ($row = $resultServicos->fetch_assoc()) {
+    $servicos[] = $row;
+}
+
 ?>
 
 
@@ -133,11 +156,7 @@ while ($row = $resultProjetos->fetch_assoc()) {
                     <?php if (isset($os['id'])): ?>
                         <input id="osId" type="hidden" name="id" value="<?= htmlspecialchars($os['id']) ?>">
                     <?php endif; ?>
-                    <div class="flex flex-col md:col-span-2">
-                        <label for="descricao" class="text-gray-700 mb-1 text-sm font-medium">Descrição do Serviço</label>
-                        <textarea id="descricao" name="descricao" rows="4"
-                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100"><?= htmlspecialchars($os['descricao'] ?? '') ?></textarea>
-                    </div>
+
 
                     <div class="flex flex-col">
                         <label for="responsavel" class="text-gray-700 mb-1 text-sm font-medium">Responsavel</label>
@@ -210,6 +229,8 @@ while ($row = $resultProjetos->fetch_assoc()) {
 
                 </div>
 
+
+
                 <div class="flex justify-end gap-6">
 
                     <button onclick="generatePDF()" name="salvar"
@@ -224,13 +245,13 @@ while ($row = $resultProjetos->fetch_assoc()) {
 
             </form>
 
+
             <?php if ($obra): ?>
-                <div class="w-full bg-white p-6 rounded-lg shadow-lg">
+                <div class="w-full bg-white p-6 rounded-lg shadow-lg mt-10">
                     <h3 class="text-xl font-semibold mb-4 text-gray-800">Informações da Obra</h3>
 
                     <h3 class="text-xl font-semibold text-gray-900 mb-2"><?php echo $obra['nome']; ?></h3>
 
-                    <p class="text-sm text-gray-700 mb-1"><strong>Descrição:</strong> <?php echo $obra['descricao']; ?></p>
 
                     <!-- Endereço será preenchido dinamicamente -->
                     <p class="text-sm text-gray-700 mb-1">
@@ -278,6 +299,135 @@ while ($row = $resultProjetos->fetch_assoc()) {
             <?php endif; ?>
 
 
+            <div class="w-full bg-white p-6 rounded-lg shadow-lg w-full mt-10">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-6 text-start">
+                    Serviços Vinculados
+                </h2>
+                <!-- Botão para abrir o modal, alterando o tipo para "button" para evitar o envio do formulário -->
+                <button type="button" class="bg-primary hover:bg-primary-dark text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:shadow-lg transition duration-300" data-modal-toggle="adicionarServicoModal">
+                    Adicionar Serviço à OS
+                </button>
+
+                <div id="servicosContainer" class="mt-6 overflow-x-auto">
+                    <table class="w-full table-auto border-collapse rounded-lg overflow-hidden">
+                        <thead class="bg-[#F3F5F7] text-left">
+                            <tr>
+                                <th class="p-3">Nome</th>
+                                <th class="p-3">Unidade</th>
+                                <th class="p-3">Quantidade</th>
+                                <th class="p-3">Tipo</th>
+                                <th class="p-3">Executor</th>
+                                <th class="p-3">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <?php foreach ($servicos as $servico): ?>
+                                <tr class="servicoItem" data-servico-id="<?= $servico['id'] ?>">
+                                    <td class="p-3 font-semibold"><?= htmlspecialchars($servico['nome']) ?></td>
+                                    <td class="p-3"><?= htmlspecialchars($servico['und_do_servico']) ?></td>
+                                    <td class="p-3"><?= htmlspecialchars($servico['quantidade']) ?></td>
+                                    <td class="p-3"><?= htmlspecialchars($servico['tipo_servico']) ?></td>
+                                    <td class="p-3"><?= htmlspecialchars($servico['executor']) ?></td>
+                                    <td class="p-3">
+                                        <button class="text-red-500 hover:text-red-700 removeServicoBtn">Remover</button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+
+
+                <input type="hidden" name="servicos_vinculados" id="servicosVinculados">
+            </div>
+
+
+            <div id="adicionarServicoModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center">
+                <div class="bg-white w-full max-w-lg p-6 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold">Adicionar Serviço à OS</h2>
+                        <button type="button" class="text-gray-500 hover:text-gray-700" onclick="toggleModal()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <form id="formAdicionarServico">
+                        <!-- Dropdown de serviços -->
+                        <div class="mb-4">
+                            <?php if (isset($os['id'])): ?>
+                                <input id="osId" type="hidden" name="os_id" value="<?= htmlspecialchars($os['id']) ?>">
+                            <?php endif; ?>
+
+                            <label for="servicos" class="block text-sm font-medium text-gray-700">Serviço</label>
+                            <input list="lista-servicos" name="nome" id="servicos"
+                                class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                placeholder="Digite ou selecione um serviço" required>
+
+                            <datalist id="lista-servicos">
+                                <?php
+                                $sql = "SELECT nome FROM servicos";
+                                $result = $conn->query($sql);
+                                if ($result->num_rows > 0) {
+                                    while ($row = $result->fetch_assoc()) {
+                                        echo "<option value='" . htmlspecialchars($row['nome'], ENT_QUOTES) . "'>";
+                                    }
+                                }
+                                ?>
+                            </datalist>
+
+                        </div>
+
+                        <!-- Unidade de Medida -->
+                        <div class="mb-4">
+                            <label for="und_do_servico" class="block text-sm font-medium text-gray-700">Unidade de Medida</label>
+                            <input type="text" id="und_do_servico" name="und_do_servico" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <!-- Quantidade -->
+                        <div class="mb-4">
+                            <label for="quantidade" class="block text-sm font-medium text-gray-700">Quantidade</label>
+                            <input type="number" id="quantidade" name="quantidade" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <!-- Tipo de Serviço -->
+                        <div class="mb-4">
+                            <label for="tipo_servico" class="block text-sm font-medium text-gray-700">Tipo de Serviço</label>
+                            <select id="tipo_servico" name="tipo_servico" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                <option value="preventiva">Preventiva</option>
+                                <option value="corretiva">Manutenção</option>
+                            </select>
+                        </div>
+
+                        <!-- Executor -->
+                        <div class="mb-4">
+                            <label for="executor" class="block text-sm font-medium text-gray-700">Executor</label>
+                            <input type="text" id="executor" name="executor" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <!-- Data de Início -->
+                        <div class="mb-4">
+                            <label for="dt_inicio" class="block text-sm font-medium text-gray-700">Data de Início</label>
+                            <input type="date" id="dt_inicio" name="dt_inicio" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <!-- Data Final -->
+                        <div class="mb-4">
+                            <label for="dt_final" class="block text-sm font-medium text-gray-700">Data Final</label>
+                            <input type="date" id="dt_final" name="dt_final" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="flex justify-end space-x-4">
+                            <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600" onclick="toggleModal()">Cancelar</button>
+                            <button id="addServicoBtn" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
             <?php if (isset($os['id'])): ?>
                 <div class="mt-10 p-6 bg-white rounded-lg shadow-md">
                     <h3 class="text-xl font-semibold mb-4 text-gray-800">Solicitações de Compras</h3>
@@ -323,57 +473,9 @@ while ($row = $resultProjetos->fetch_assoc()) {
     </div>
 
 
-    <script>
-        document.querySelector("form").addEventListener("submit", async function(e) {
-            e.preventDefault();
+    <script src="./js/detalhes.js"></script>
 
 
-            const urlParams = new URLSearchParams(window.location.search);
-
-
-            const form = e.target;
-            const formData = new FormData(form);
-
-            const url = './update.php';
-
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    Toastify({
-                        text: "Operação realizada com sucesso!",
-                        duration: 3000,
-                        gravity: "top", // "top" ou "bottom"
-                        position: "right", // "left", "center" ou "right"
-                        backgroundColor: "#10b981", // Verde (tailwind: bg-green-500)
-                        close: true
-                    }).showToast();
-
-                    form.reset();
-
-                    window.location.href = './index.php'
-                } else {
-                    Toastify({
-                        text: "Operação com Erro!. Por Favor Consulte o Suporte",
-                        duration: 3000,
-                        gravity: "top",
-                        position: "right",
-                        backgroundColor: "#ef4444", // Vermelho (tailwind: bg-red-500)
-                        close: true
-                    }).showToast();
-
-                }
-            } catch (error) {
-                alert('Erro na requisição: ' + error.message);
-            }
-        });
-    </script>
 
 
 </body>

@@ -18,13 +18,24 @@ if ($conn->connect_error) {
 $empresa_id = $_SESSION['empresa_id'];
 
 
-$sql = "SELECT * FROM obras WHERE empresa_id = ?";
+
+$sql = "
+  SELECT 
+    obras.*, 
+    status_obras.nome AS status_nome,
+    status_obras.cor as status_cor
+  FROM obras 
+  JOIN status_obras ON obras.status_id = status_obras.id 
+  WHERE obras.empresa_id = ?
+";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $empresa_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
+
 ?>
+
 
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -76,6 +87,12 @@ $result = $stmt->get_result();
 
         </div>
 
+        <button onclick="window.location.href='../quadro/obras_quadro.php'" class="mt-4 flex items-center gap-2 bg-white py-2 px-6 rounded-lg font-semibold border border-gray-300 hover:bg-gray-100 text-gray-800 transition">
+      <i class="fas fa-th-large text-gray-600"></i>
+      Visualizar Quadro
+    </button>
+
+
         <!-- Tabela -->
         <div class="overflow-x-auto rounded-lg shadow-lg bg-white">
             <table class="min-w-full divide-y divide-gray-200">
@@ -93,12 +110,6 @@ $result = $stmt->get_result();
                 <tbody class="divide-y divide-gray-200">
                     <?php while ($row = $result->fetch_assoc()) {
                         $obra_id = $row['id'];
-
-                        // Buscar solicitações de compra dessa obra
-                        $stmt_sc = $conn->prepare("SELECT * FROM solicitacao_compras WHERE obra_id = ?");
-                        $stmt_sc->bind_param('i', $obra_id);
-                        $stmt_sc->execute();
-                        $sc_result = $stmt_sc->get_result();
                     ?>
                         <tr class="hover:bg-gray-100">
                             <td class="px-2 text-center">
@@ -108,20 +119,10 @@ $result = $stmt->get_result();
                             </td>
                             <td class="px-6 py-4"><?php echo htmlspecialchars($row['nome']); ?></td>
 
-                            <?php
-                            $status = htmlspecialchars($row['status']);
-                            $bgColor = match ($status) {
-                                'Planejada'     => 'bg-blue-100 text-blue-800',
-                                'Em andamento'  => 'bg-yellow-100 text-yellow-800',
-                                'Concluída'     => 'bg-green-100 text-green-800',
-                                'Suspensa'      => 'bg-purple-100 text-purple-800',
-                                'Cancelada'     => 'bg-red-100 text-red-800',
-                                default         => 'bg-gray-100 text-gray-800',
-                            };
-                            ?>
                             <td class="px-6 py-4">
-                                <span class="px-3 py-1 rounded-full text-sm font-semibold <?= $bgColor ?>">
-                                    <?= $status ?>
+                                <span style="background-color: <?= htmlspecialchars($row['status_cor']) ?>; color: black;"
+                                    class="px-3 py-1 rounded-full text-sm font-semibold ">
+                                    <?= htmlspecialchars($row['status_nome']) ?>
                                 </span>
                             </td>
                             <td class="px-6 py-4"><?php echo $row['data_inicio']; ?></td>

@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <title>Inicio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -24,7 +24,7 @@
   </script>
 </head>
 
-<body class="bg-background text-primary min-h-screen flex">
+<body class="bg-[#F2F4F7] min-h-screen flex">
 
   <!-- Side Menu -->
   <?php include '../layout/sidemenu.php'; ?>

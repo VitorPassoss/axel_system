@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $_POST['nome'] ?? '';
     $descricao = $_POST['descricao'] ?? '';
     $tipo_obra = $_POST['tipo_obra'] ?? '';
-    $status = $_POST['status'] ?? '';
+    $status = $_POST['status_id'] ?? '';
     $data_inicio = $_POST['data_inicio'] ?? null;
     $data_previsao_fim = $_POST['data_previsao_fim'] ?? null;
     $data_fim = $_POST['data_fim'] ?? null;
@@ -65,7 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nome = $conn->real_escape_string($nome);
     $descricao = $conn->real_escape_string($descricao);
     $tipo_obra = $conn->real_escape_string($tipo_obra);
-    $status = $conn->real_escape_string($status);
     $endereco = $conn->real_escape_string($endereco);
     $cidade = $conn->real_escape_string($cidade);
     $estado = $conn->real_escape_string($estado);
@@ -74,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $responsavel_tecnico = $conn->real_escape_string($responsavel_tecnico);
 
     $sql_update = "UPDATE obras SET
-        nome = '$nome', descricao = '$descricao', tipo_obra = '$tipo_obra', status = '$status',
+        nome = '$nome', descricao = '$descricao', tipo_obra = '$tipo_obra', status_id = '$status',
         data_inicio = " . ($data_inicio ? "'$data_inicio'" : "NULL") . ",
         data_previsao_fim = " . ($data_previsao_fim ? "'$data_previsao_fim'" : "NULL") . ",
         data_fim = " . ($data_fim ? "'$data_fim'" : "NULL") . ",

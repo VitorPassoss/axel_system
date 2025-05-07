@@ -71,6 +71,7 @@ while ($row = $resultServicos->fetch_assoc()) {
 
 
 
+
     <style>
         * {
             font-family: "Poppins", sans-serif;
@@ -116,7 +117,7 @@ while ($row = $resultServicos->fetch_assoc()) {
 
                     <div class="flex flex-col">
                         <label for="responsavel" class="text-gray-700 mb-1 text-sm font-medium">Responsavel</label>
-                        <input type="text" id="responsavel" name="responsavel_os" required
+                        <input type="text" id="responsavel" name="responsavel_os"
                             value="<?= htmlspecialchars($os['responsavel'] ?? '') ?>"
                             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
                     </div>
@@ -210,10 +211,12 @@ while ($row = $resultServicos->fetch_assoc()) {
                 <div class="w-full bg-white p-6 rounded-lg shadow-lg w-full">
                     <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-6 text-start">
                         Serviços Vinculados
-                    </h2> <button
-                        class="bg-primary hover:bg-primary-dark text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:shadow-lg transition duration-300" data-modal-toggle="adicionarServicoModal">
-                        Adicionar Serviço á Os
+                    </h2>
+                    <!-- Botão para abrir o modal, alterando o tipo para "button" para evitar o envio do formulário -->
+                    <button type="button" class="bg-primary hover:bg-primary-dark text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:shadow-lg transition duration-300" data-modal-toggle="adicionarServicoModal">
+                        Adicionar Serviço à OS
                     </button>
+
 
                     <div id="servicosContainer" class="mt-6 space-y-4">
                         <!-- Serviços adicionados aparecerão aqui -->
@@ -246,21 +249,30 @@ while ($row = $resultServicos->fetch_assoc()) {
                     </svg>
                 </button>
             </div>
-            <form  id="formAdicionarServico">
+            <form id="formAdicionarServico">
                 <!-- Dropdown de serviços -->
                 <div class="mb-4">
+                    <?php if (isset($os['id'])): ?>
+                        <input id="osId" type="hidden" name="os_id" value="<?= htmlspecialchars($os['id']) ?>">
+                    <?php endif; ?>
+
                     <label for="servicos" class="block text-sm font-medium text-gray-700">Serviço</label>
-                    <select id="servicos" name="servico_id" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                    <input list="lista-servicos" name="nome" id="servicos"
+                        class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        placeholder="Digite ou selecione um serviço" required>
+
+                    <datalist id="lista-servicos">
                         <?php
-                        $sql = "SELECT id, nome FROM servicos";
+                        $sql = "SELECT nome FROM servicos";
                         $result = $conn->query($sql);
                         if ($result->num_rows > 0) {
                             while ($row = $result->fetch_assoc()) {
-                                echo "<option value='" . $row['id'] . "'>" . $row['nome'] . "</option>";
+                                echo "<option value='" . htmlspecialchars($row['nome'], ENT_QUOTES) . "'>";
                             }
                         }
                         ?>
-                    </select>
+                    </datalist>
+
                 </div>
 
                 <!-- Unidade de Medida -->
@@ -280,8 +292,7 @@ while ($row = $resultServicos->fetch_assoc()) {
                     <label for="tipo_servico" class="block text-sm font-medium text-gray-700">Tipo de Serviço</label>
                     <select id="tipo_servico" name="tipo_servico" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
                         <option value="preventiva">Preventiva</option>
-                        <option value="corretiva">Corretiva</option>
-                        <option value="urgente">Urgente</option>
+                        <option value="corretiva">Manutenção</option>
                     </select>
                 </div>
 
@@ -313,186 +324,9 @@ while ($row = $resultServicos->fetch_assoc()) {
     </div>
 
 
-    <script>
-        document.querySelector("form").addEventListener("submit", async function(e) {
-            e.preventDefault();
 
 
-            const urlParams = new URLSearchParams(window.location.search);
+    <script src="./js/form.js"></script>
 
-
-            const form = e.target;
-            const formData = new FormData(form);
-
-            const url = './create.php';
-
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    Toastify({
-                        text: "Operação realizada com sucesso!",
-                        duration: 3000,
-                        gravity: "top", // "top" ou "bottom"
-                        position: "right", // "left", "center" ou "right"
-                        backgroundColor: "#10b981", // Verde (tailwind: bg-green-500)
-                        close: true
-                    }).showToast();
-
-                    form.reset();
-
-                    window.location.href = './index.php'
-                } else {
-                    Toastify({
-                        text: "Operação com Erro!. Por Favor Consulte o Suporte",
-                        duration: 3000,
-                        gravity: "top",
-                        position: "right",
-                        backgroundColor: "#ef4444", // Vermelho (tailwind: bg-red-500)
-                        close: true
-                    }).showToast();
-
-                }
-            } catch (error) {
-                alert('Erro na requisição: ' + error.message);
-            }
-        });
-    </script>
-
-
-    <script>
-        let servicos = [];
-
-        function renderServicos() {
-            const container = document.getElementById("servicosContainer");
-            container.innerHTML = '';
-
-            servicos.forEach((servico, index) => {
-                const card = document.createElement('div');
-                card.className = "bg-gray-100 p-4 rounded-lg shadow flex justify-between items-center";
-
-                card.innerHTML = `
-                <div>
-                    <p class="text-lg font-semibold text-gray-800">${servico.nome}</p>
-                    <p class="text-sm text-gray-600">Valor: R$ ${servico.valor}</p>
-                </div>
-                <button onclick="removerServico(${index})" class="text-red-500 hover:text-red-700 font-bold text-sm">Remover</button>
-            `;
-
-                container.appendChild(card);
-            });
-
-            document.getElementById("servicosVinculados").value = JSON.stringify(servicos);
-        }
-
-        function adicionarServico(servico) {
-            servicos.push(servico);
-            renderServicos();
-        }
-
-        function removerServico(index) {
-            servicos.splice(index, 1);
-            renderServicos();
-        }
-    </script>
-
-    <script>
-        const servicosDisponiveis = <?= json_encode($servicos) ?>;
-        const selecionados = new Set();
-        const input = document.getElementById("servicoInput");
-        const suggestionsBox = document.getElementById("servicoSuggestions");
-        const listaSelecionados = document.getElementById("servicosSelecionados");
-        const hiddenInput = document.getElementById("servicosHidden");
-
-        function mostrarTodosServicos() {
-            suggestionsBox.innerHTML = '';
-            const filtrados = servicosDisponiveis.filter(s => !selecionados.has(s));
-
-            filtrados.forEach(servico => {
-                const li = document.createElement("li");
-                li.textContent = servico;
-                li.className = "cursor-pointer px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700";
-                li.onclick = () => addServico(servico);
-                suggestionsBox.appendChild(li);
-            });
-
-            suggestionsBox.classList.toggle("hidden", filtrados.length === 0);
-        }
-
-        function filterServicos() {
-            const query = input.value.toLowerCase();
-            const filtrados = servicosDisponiveis.filter(s => s.toLowerCase().includes(query) && !selecionados.has(s));
-
-            suggestionsBox.innerHTML = '';
-            filtrados.forEach(servico => {
-                const li = document.createElement("li");
-                li.textContent = servico;
-                li.className = "cursor-pointer px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700";
-                li.onclick = () => addServico(servico);
-                suggestionsBox.appendChild(li);
-            });
-
-            suggestionsBox.classList.toggle("hidden", filtrados.length === 0);
-        }
-
-        function handleAddServico(e) {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                const valor = input.value.trim();
-                if (valor && !selecionados.has(valor)) {
-                    addServico(valor);
-                    if (!servicosDisponiveis.includes(valor)) {
-                        servicosDisponiveis.push(valor);
-                    }
-                }
-            }
-        }
-
-        function addServico(servico) {
-            selecionados.add(servico);
-            input.value = '';
-            suggestionsBox.classList.add("hidden");
-            renderSelecionados();
-        }
-
-        function removeServico(servico) {
-            selecionados.delete(servico);
-            renderSelecionados();
-        }
-
-        function renderSelecionados() {
-            listaSelecionados.innerHTML = '';
-            selecionados.forEach(servico => {
-                const tag = document.createElement("div");
-                tag.className = "flex items-center bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded-full px-3 py-1 text-sm";
-                tag.innerHTML = `
-                ${servico}
-                <button type="button" class="ml-2 text-blue-700 hover:text-blue-900 dark:hover:text-white" onclick="removeServico('${servico}')">&times;</button>
-            `;
-                listaSelecionados.appendChild(tag);
-            });
-
-            hiddenInput.value = Array.from(selecionados).join(",");
-        }
-    </script>
-    <script>
-        // Função para alternar a visibilidade do modal
-        function toggleModal() {
-            const modal = document.getElementById("adicionarServicoModal");
-            modal.classList.toggle("hidden");
-        }
-
-        // Abrir o modal (quando o botão for clicado)
-        const modalToggleBtns = document.querySelectorAll('[data-modal-toggle="adicionarServicoModal"]');
-        modalToggleBtns.forEach(btn => {
-            btn.addEventListener("click", () => toggleModal());
-        });
-    </script>
 
 </body>

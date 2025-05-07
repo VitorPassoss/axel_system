@@ -163,7 +163,6 @@ $result = $stmt->get_result();
           <tr class="">
             <th class="px-6 py-3 text-left text-sm uppercase">Número</th>
             <th class="px-6 py-3 text-left text-sm uppercase">Status</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Descrição</th>
             <th class="px-6 py-3 text-left text-sm uppercase">Obra</th>
             <th class="px-6 py-3 text-left text-sm uppercase">Ações</th>
 
@@ -189,7 +188,6 @@ $result = $stmt->get_result();
                   <?= $status ?>
                 </span>
               </td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['descricao']); ?></td>
 
               <td class="px-6 py-4"><?php echo htmlspecialchars($row['nome_obra']); ?></td>
 

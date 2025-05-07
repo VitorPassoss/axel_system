@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-
 // Verifica se a variável de sessão 'empresa_id' existe
 if (!isset($_SESSION['empresa_id'])) {
     die("Erro: Empresa não identificada.");
@@ -71,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     )";
 
     if ($conn->query($sql) === TRUE) {
-        $os_id = $conn->insert_id;
+        $os_id = $conn->insert_id; // Pega o ID da OS recém-criada
 
         // Criar conexão PDO
         $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
@@ -83,25 +82,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (is_array($servicos)) {
                 $stmt = $pdo->prepare("
-                    INSERT INTO servicos (
-                        descricao, und_do_servico, quantidade, tipo_servico, executor,
-                        os_id, dt_inicio, dt_final
+                    INSERT INTO servicos_os (
+                        os_id, servico_id, und_do_servico, quantidade, tipo_servico, executor, dt_inicio, dt_final
                     ) VALUES (
-                        :descricao, :und_do_servico, :quantidade, :tipo_servico, :executor,
-                        :os_id, :dt_inicio, :dt_final
+                        :os_id, :servico_id, :und_do_servico, :quantidade, :tipo_servico, :executor, :dt_inicio, :dt_final
                     )
                 ");
 
                 foreach ($servicos as $servico) {
+                    // Verifica se o serviço já existe
+                    $servico_nome = $servico['nome'];
+                    $sql_check_servico = "SELECT id FROM servicos WHERE nome = '$servico_nome' LIMIT 1";
+                    $result_servico = $conn->query($sql_check_servico);
+
+                    if ($result_servico && $result_servico->num_rows > 0) {
+                        // Serviço já existe, obtém o id
+                        $row_servico = $result_servico->fetch_assoc();
+                        $servico_id = $row_servico['id'];
+                    } else {
+                        // Serviço não existe, cria um novo
+                        $sql_insert_servico = "INSERT INTO servicos (nome, unidade) VALUES ('" . $conn->real_escape_string($servico_nome) . "', '" . $conn->real_escape_string($servico['unidade']) . "')";
+                        if ($conn->query($sql_insert_servico) === TRUE) {
+                            $servico_id = $conn->insert_id;
+                        } else {
+                            // Erro ao inserir o serviço
+                            echo json_encode(['success' => false, 'error' => 'Erro ao inserir serviço: ' . $conn->error]);
+                            exit;
+                        }
+                    }
+
+                    // Inserção na tabela servicos_os para cada serviço
                     $stmt->execute([
-                        ':descricao' => $servico['descricao'],
-                        ':und_do_servico' => $servico['und_do_servico'] ?? null,
-                        ':quantidade' => $servico['quantidade'],
-                        ':tipo_servico' => $servico['tipo_servico'] ?? null,
-                        ':executor' => $servico['executor'] ?? null,
                         ':os_id' => $os_id,
-                        ':dt_inicio' => $servico['dt_inicio'] ?? null,
-                        ':dt_final' => $servico['dt_final'] ?? null,
+                        ':servico_id' => $servico_id,
+                        ':und_do_servico' => $servico['unidade'] ?? null,
+                        ':quantidade' => $servico['quantidade'],
+                        ':tipo_servico' => $servico['tipo'] ?? null,
+                        ':executor' => $servico['executor'] ?? null,
+                        ':dt_inicio' => $servico['data_inicio'] ?? null,
+                        ':dt_final' => $servico['data_final'] ?? null,
                     ]);
                 }
             }
@@ -118,9 +137,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     exit;
 }
-
-
-
 
 function salvarAnexos(PDO $conn, $tabela_ref, $ref_id, $arquivos)
 {
@@ -153,3 +169,4 @@ function salvarAnexos(PDO $conn, $tabela_ref, $ref_id, $arquivos)
         }
     }
 }
+?>
