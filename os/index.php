@@ -18,6 +18,9 @@ $empresa_id_sessao = $_SESSION['empresa_id'];
 // Filtros recebidos via GET
 $filtro_empresa = $_GET['empresa_id'] ?? '';
 $filtro_obra = $_GET['obra_id'] ?? '';
+$filtro_contrato = $_GET['contrato_id'] ?? '';
+$filtro_periodo = $_GET['periodo'] ?? '';
+
 
 // Consulta de empresas para o filtro
 $empresas = $conn->query("SELECT id, nome FROM empresas");
@@ -42,15 +45,35 @@ if (!empty($filtro_obra)) {
   $types .= "i";
 }
 
+
+if (!empty($filtro_contrato)) {
+  $where .= " AND os.contrato_id = ?";
+  $params[] = intval($filtro_contrato);
+  $types .= "i";
+}
+
+if (!empty($filtro_periodo)) {
+  if ($filtro_periodo === 'hoje') {
+    $where .= " AND DATE(os.data_inicio) = CURDATE()";
+  } elseif ($filtro_periodo === 'mes') {
+    $where .= " AND MONTH(os.data_inicio) = MONTH(CURDATE()) AND YEAR(os.data_inicio) = YEAR(CURDATE())";
+  }
+}
+
+
+// Consulta final com joins
 // Consulta final com joins
 $sql = "
 SELECT 
     os.*, 
-    o.nome AS nome_obra
+    o.nome AS nome_obra,
+    c.numero_contrato AS numero_contrato
 FROM 
     ordem_de_servico os
 LEFT JOIN 
     obras o ON os.obra_id = o.id
+LEFT JOIN 
+    contratos c ON os.contrato_id = c.id
 $where
 ORDER BY os.id DESC
 ";
@@ -146,6 +169,39 @@ $result = $stmt->get_result();
             </select>
           </div>
 
+          <!-- Filtro de Contrato -->
+          <div class="flex items-center gap-2 px-4 py-4">
+            <div>
+              <i class="fas fa-file-contract text-gray-500"></i>
+              <label for="contrato_id" class="text-sm font-medium text-gray-700">Contrato</label>
+              <select name="contrato_id" id="contrato_id" class="mt-1 block w-full p-2 mt-2 sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Todos</option>
+                <?php
+                $contratos = $conn->query("SELECT id, numero_contrato FROM contratos WHERE empresa_id = $empresa_id_sessao");
+                while ($contrato = $contratos->fetch_assoc()) {
+                ?>
+                  <option value="<?= $contrato['id'] ?>" <?= ($_GET['contrato_id'] ?? '') == $contrato['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($contrato['numero_contrato']) ?>
+                  </option>
+                <?php } ?>
+              </select>
+            </div>
+          </div>
+
+          <!-- Filtro de Data -->
+          <div class="flex items-center gap-2 px-4 py-4">
+            <div>
+              <i class="fas fa-calendar text-gray-500"></i>
+              <label for="periodo" class="text-sm font-medium text-gray-700">Período</label>
+              <select name="periodo" id="periodo" class="mt-1 block w-full p-2 mt-2 sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Todos</option>
+                <option value="hoje" <?= ($_GET['periodo'] ?? '') == 'hoje' ? 'selected' : '' ?>>Hoje</option>
+                <option value="mes" <?= ($_GET['periodo'] ?? '') == 'mes' ? 'selected' : '' ?>>Este Mês</option>
+              </select>
+            </div>
+          </div>
+
+
           <div class="flex items-center py-4 ">
             <button type="submit" class="flex items-center bg-black mt-7 ml-4 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50">
               <i class="fas fa-filter mr-2"></i> <!-- Ícone de filtro -->
@@ -164,14 +220,16 @@ $result = $stmt->get_result();
             <th class="px-6 py-3 text-left text-sm uppercase">Número</th>
             <th class="px-6 py-3 text-left text-sm uppercase">Status</th>
             <th class="px-6 py-3 text-left text-sm uppercase">Obra</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Ações</th>
+            <th class="px-6 py-3 text-left text-sm uppercase">N-Contrato</th>
+
+            <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
 
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
           <?php while ($row = $result->fetch_assoc()) { ?>
-            <tr class="hover:bg-gray-100">
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['numero_os']); ?></td>
+            <tr class="hover:bg-gray-100" >
+              <td class="px-6 py-4" onclick="visualizarProjeto(<?php echo $row['id']; ?>)"><?php echo htmlspecialchars($row['id']); ?></td>
 
               <?php
               $status = htmlspecialchars($row['status']);
@@ -183,17 +241,23 @@ $result = $stmt->get_result();
                 default         => 'bg-gray-100 text-gray-800',
               };
               ?>
-              <td class="px-6 py-4">
+              <td class="px-6 py-4" onclick="visualizarProjeto(<?php echo $row['id']; ?>)">
                 <span class="px-3 py-1 rounded-full text-sm font-semibold <?= $bgColor ?>">
                   <?= $status ?>
                 </span>
               </td>
 
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['nome_obra']); ?></td>
+              <td class="px-6 py-4" onclick="visualizarProjeto(<?php echo $row['id']; ?>)"><?php echo htmlspecialchars($row['nome_obra']); ?></td>
+              <td class="px-6 py-4" onclick="visualizarProjeto(<?php echo $row['id']; ?>)"><?php echo htmlspecialchars($row['numero_contrato']); ?></td>
 
-              <td class="px-6 py-4 ">
+              <td class="px-6 py-4 text-center z-[9999]">
                 <button onclick="visualizarProjeto(<?php echo $row['id']; ?>)" class=" hover:underline ml-2">
                   <i class="fas fa-eye mr-3 text-gray-500"></i>
+
+                </button>
+
+                <button onclick="compras(<?php echo $row['id']; ?>)" class=" hover:underline ml-2">
+                  <i class="fas fa-shopping-cart mr-3 text-gray-500"></i>
 
                 </button>
 
@@ -228,6 +292,12 @@ $result = $stmt->get_result();
 
     function visualizarProjeto(id) {
       window.location.href = 'detalhes.php?sc_id=' + id;
+
+    }
+
+
+    function compras(id) {
+      window.location.href = 'sc_compra?sc_id=' + id;
 
     }
   </script>

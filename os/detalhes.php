@@ -51,6 +51,34 @@ if (isset($_GET['sc_id'])) {
             $resultContrato = $stmtContrato->get_result();
             $contrato = $resultContrato->fetch_assoc();
         }
+
+
+        $solicitacoes = [];
+
+        $stmtSC = $conn->prepare("SELECT * FROM solicitacao_compras WHERE os_id = ? AND empresa_id = ?");
+        $stmtSC->bind_param("ii", $sc_id, $empresa_id);
+        $stmtSC->execute();
+        $resultSC = $stmtSC->get_result();
+
+        while ($row = $resultSC->fetch_assoc()) {
+            // Buscar itens da solicitação
+            $stmtItens = $conn->prepare("SELECT * FROM sc_item WHERE solicitacao_id = ?");
+            $stmtItens->bind_param("i", $row['id']);
+            $stmtItens->execute();
+            $resultItens = $stmtItens->get_result();
+            $itens = [];
+
+            while ($item = $resultItens->fetch_assoc()) {
+                $itens[] = $item;
+            }
+
+            $row['itens'] = $itens; // Anexa os itens à solicitação
+            $solicitacoes[] = $row;
+
+            $stmtItens->close();
+        }
+
+        $stmtSC->close();
     }
 }
 
@@ -139,16 +167,31 @@ while ($row = $resultServicos->fetch_assoc()) {
     <div class="w-full ">
         <div class="relative  p-8 animate-fadeIn">
 
-            <!-- Botão Fechar -->
-            <button onclick="window.location.href = './index.php'" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-3xl">
-                &times;
-            </button>
 
-            <!-- Cabeçalho -->
-            <!-- Cabeçalho -->
-            <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-6 text-center">
-                Detalhes da Os
-            </h2>
+
+
+            <header class="bg-white rounded-2xl shadow-lg p-6 mb-10 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button onclick="window.location.href='../os'" class="text-gray-600 hover:text-primary transition">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <h1 class="text-2xl font-semibold text-gray-800">Detalhes da O.S - N <?= htmlspecialchars($os['id']) ?></h1>
+
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="window.location.href='./relatorio_fotografico'" class="bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center gap-2">
+                        <i class="fas fa-camera-retro"></i> <!-- Ícone de câmera -->
+                        Relatório Fotográfico
+                    </button>
+                    <button onclick="window.location.href='./sc_compra?sc_id=<?php echo htmlspecialchars($os['id']); ?>'" class="bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center gap-2">
+                        <i class="fas fa-cart-plus"></i> <!-- Ícone de carrinho de compras -->
+                        Solicitar Compra
+                    </button>
+
+                </div>
+
+            </header>
+
 
             <!-- Formulário -->
             <form method="POST" enctype="multipart/form-data" class="space-y-6">
@@ -343,6 +386,26 @@ while ($row = $resultServicos->fetch_assoc()) {
             </div>
 
 
+
+
+            <?php
+            $totalSolicitacoes = count($solicitacoes);
+            $totalInsumos = 0;
+            $quantidadeTotal = 0;
+
+            foreach ($solicitacoes as $sc) {
+                if (!empty($sc['itens'])) {
+                    $totalInsumos += count($sc['itens']);
+                    foreach ($sc['itens'] as $item) {
+                        $quantidadeTotal += (float) $item['quantidade'];
+                    }
+                }
+            }
+            ?>
+
+
+
+
             <div id="adicionarServicoModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center">
                 <div class="bg-white w-full max-w-lg p-6 rounded-lg shadow-lg">
                     <div class="flex justify-between items-center mb-4">
@@ -428,14 +491,7 @@ while ($row = $resultServicos->fetch_assoc()) {
             </div>
 
 
-            <?php if (isset($os['id'])): ?>
-                <div class="mt-10 p-6 bg-white rounded-lg shadow-md">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Solicitações de Compras</h3>
 
-                    <p class="text-gray-500">Nenhuma Solicitação de compra encontrada.</p>
-
-                </div>
-            <?php endif; ?>
 
             <?php if (isset($os['id'])): ?>
                 <div class="mt-10 p-6 bg-white rounded-lg shadow-md">
@@ -468,6 +524,109 @@ while ($row = $resultServicos->fetch_assoc()) {
                     <?php $stmt_docs->close(); ?>
                 </div>
             <?php endif; ?>
+
+
+            <div class="mt-10 p-6 bg-white rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-6 text-gray-800">Solicitações de Compra desta OS</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg text-center">
+                        <div class="text-sm text-blue-800 font-semibold">Total de Solicitações</div>
+                        <div class="text-2xl text-blue-900 font-bold"><?= $totalSolicitacoes ?></div>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 p-4 rounded-lg text-center">
+                        <div class="text-sm text-green-800 font-semibold">Valor Total Solicitado</div>
+                        <div class="text-2xl text-green-900 font-bold"><?= $totalInsumos ?></div>
+                    </div>
+                    <div class="bg-purple-50 border border-purple-200 p-4 rounded-lg text-center">
+                        <div class="text-sm text-purple-800 font-semibold">Valor Total Aprovado</div>
+                        <div class="text-2xl text-purple-900 font-bold"><?= $quantidadeTotal ?></div>
+                    </div>
+                </div>
+                <?php if (!empty($solicitacoes)): ?>
+                    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <?php foreach ($solicitacoes as $sc): ?>
+                            <div class="bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-5 hover:shadow-md transition duration-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm text-gray-400">Solicitação #<?= htmlspecialchars($sc['id']) ?></span>
+                                    <?php
+                                    $status = strtolower($sc['status']);
+                                    $statusColor = match ($status) {
+                                        'pendente' => 'bg-yellow-100 text-yellow-800',
+                                        'aprovado' => 'bg-green-100 text-green-800',
+                                        'rejeitado' => 'bg-red-100 text-red-800',
+                                        default => 'bg-gray-200 text-gray-600',
+                                    };
+                                    ?>
+                                    <span class="text-xs font-medium px-3 py-1 rounded-full <?= $statusColor ?>">
+                                        <?= ucfirst($sc['status']) ?>
+                                    </span>
+
+
+
+                                </div>
+                                <div class="text-gray-800 text-base font-medium mb-2">
+                                    <?= htmlspecialchars($sc['descricao']) ?>
+                                </div>
+
+                                <?php if (!empty($sc['itens'])): ?>
+                                    <div class="mt-4">
+                                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Itens:</h4>
+                                        <ul class="space-y-3 text-sm text-gray-700">
+                                            <?php foreach ($sc['itens'] as $item): ?>
+                                                <li class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        <div>
+                                                            <div class="mb-1">
+                                                                <span class="font-semibold text-gray-500">ID:</span>
+                                                                <span class="ml-1"><?= htmlspecialchars($item['id']) ?></span>
+                                                            </div>
+                                                            <div class="mb-1">
+                                                                <span class="font-semibold text-gray-500">Insumo ID:</span>
+                                                                <span class="ml-1"><?= htmlspecialchars($item['insumo_id']) ?></span>
+                                                            </div>
+                                                            <div>
+                                                                <span class="font-semibold text-gray-500">Quantidade:</span>
+                                                                <span class="ml-1"><?= htmlspecialchars($item['quantidade']) ?></span>
+                                                            </div>
+
+                                                            <?php
+                                                            $grauTexto = $item['grau'] ?? '';
+                                                            $grauLower = strtolower($grauTexto);
+                                                            $grauColor = match ($grauTexto) {
+                                                                'Baixa' => 'bg-yellow-100 text-yellow-800',
+                                                                'Pouca' => 'bg-green-100 text-green-800',
+                                                                'Sinistro' => 'bg-red-100 text-red-800',
+                                                                'Urgencia' => 'bg-red-100 text-red-800',
+                                                                'Alta' => 'bg-red-100 text-red-800',
+                                                                'Media' => 'bg-orange-100 text-yellow-800',
+                                                                default => 'bg-gray-200 text-gray-600',
+                                                            };
+                                                            ?>
+                                                            <div class="mt-1">
+                                                                <span class="font-semibold text-gray-500">Grau:</span>
+                                                                <span class="ml-1 px-2 py-0.5 rounded-full text-xs font-medium <?= $grauColor ?>">
+                                                                    <?= htmlspecialchars($grauTexto) ?>
+                                                                </span>
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+                                <?php endif; ?>
+
+
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <p class="text-gray-500">Nenhuma solicitação de compra encontrada para esta OS.</p>
+                <?php endif; ?>
+            </div>
+
 
         </div>
     </div>

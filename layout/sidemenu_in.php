@@ -63,7 +63,7 @@
 <div id="sideMenu" class="  side-menu fixed top-0 left-[-100%] shadow-xl w-64 min-h-screen bg-[#FFFFFF] backdrop-blur-lg p-4 space-y-2 transition-all duration-300 ease-in-out transform rounded-lg z-30">
   <div class="flex justify-between items-center ">
     <div class="flex items-center ">
-      <img class="w-12" src="../assets/logo/il_fullxfull.2974258879_pxm3.webp" alt="">
+      <img class="w-12" src="../../assets/logo/il_fullxfull.2974258879_pxm3.webp" alt="">
       <h2 class="text-[12px] text-[#2B3A4B] font-bold">Zion Managment</h2>
     </div>
 
@@ -90,13 +90,13 @@
 
 
     // Redirecionar para a página de login ou outra página
-    window.location.href = "../onboard/login.php"; // Troque pelo URL do login ou onde você deseja redirecionar
+    window.location.href = "../../onboard/login.php"; // Troque pelo URL do login ou onde você deseja redirecionar
   });
 </script>
 
 
 <script>
-  fetch('../backend/profiles.php')
+  fetch('../../backend/profiles.php')
     .then(response => response.json())
     .then(data => {
       if (data.error) {
@@ -110,7 +110,7 @@
           const currentFolder = location.pathname.split('/').filter(Boolean).pop().toLowerCase().replace('.php', '');
 
           function getMenuItem(href, iconClass, text) {
-            const targetFolder = href.replace('../', '').toLowerCase();
+            const targetFolder = href.replace('../../', '').toLowerCase();
             const isActive = currentFolder === targetFolder;
             const bgClass = isActive ? 'bg-[#F3F5F7] text-[#2B3A4B]' : 'text-[#545D69] hover:bg-[#F3F5F7] hover:text-[#2B3A4B]';
             const iconClassExtra = isActive ? 'text-[#2B3A4B]' : 'text-[#A5ABB3]';
@@ -125,22 +125,22 @@
 
 
           let menuHTML = `<ul>
-            ${getMenuItem('../home', 'fas fa-home', 'Início')}
+            ${getMenuItem('../../home', 'fas fa-home', 'Início')}
           `;
 
           if (['gestão', 'tecnologia'].includes(setor_nome.toLowerCase())) {
             menuHTML += `
-              ${getMenuItem('../empresas', 'fas fa-diagram-project', 'Matriz e Filiais')}
-              ${getMenuItem('../contratos', 'fas fa-diagram-project', 'Contratos')}
+              ${getMenuItem('../../empresas', 'fas fa-diagram-project', 'Matriz e Filiais')}
+              ${getMenuItem('../../contratos', 'fas fa-diagram-project', 'Contratos')}
             `;
           }
 
           if (['projetos', 'gestão', 'tecnologia'].includes(setor_nome.toLowerCase())) {
             menuHTML += `
-              ${getMenuItem('../projetos', 'fa-solid fa-ruler-combined', 'Projetos')}
-              ${getMenuItem('../Obras', 'fa-solid fa-trowel-bricks', 'Obras')}
-              ${getMenuItem('../os', 'fas fa-clipboard-list', 'Ordens de Serviço')}
-              ${getMenuItem('../recursos', 'fas fa-shopping-cart', 'Solicitações')}
+              ${getMenuItem('../../projetos', 'fa-solid fa-ruler-combined', 'Projetos')}
+              ${getMenuItem('../../Obras', 'fa-solid fa-trowel-bricks', 'Obras')}
+              ${getMenuItem('../../os', 'fas fa-clipboard-list', 'Ordens de Serviço')}
+              ${getMenuItem('../../recursos', 'fas fa-shopping-cart', 'Sol. Compras')}
             `;
           }
 

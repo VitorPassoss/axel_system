@@ -9,3 +9,25 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
 <link rel="icon" type="image/png" href="../assets/logo/il_fullxfull.2974258879_pxm3.webp">
+
+
+<style>
+
+  
+    @media (prefers-color-scheme: dark) {
+
+        input,
+        textarea,
+        select {
+            background-color: #fff !important;
+            color: #000 !important;
+        }
+    }
+</style>
+
+<style>
+    * {
+        font-family: "Poppins", sans-serif;
+        font-style: normal;
+    }
+</style>

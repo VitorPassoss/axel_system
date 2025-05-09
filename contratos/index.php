@@ -100,7 +100,7 @@ $result = $stmt->get_result();
         </thead>
         <tbody class="divide-y divide-gray-200">
           <?php while ($row = $result->fetch_assoc()) { ?>
-            <tr class="hover:bg-gray-100">
+            <tr class="hover:bg-gray-100" onclick="visualizarContrato(<?php echo $row['id']; ?>)">
               <td class="px-6 py-4"><?php echo htmlspecialchars($row['numero_contrato']); ?></td>
               <td class="px-6 py-4"><?php echo htmlspecialchars($row['numero_empenho']); ?></td>
               <td class="px-6 py-4"><?php echo htmlspecialchars($row['nome_cliente']); ?></td>

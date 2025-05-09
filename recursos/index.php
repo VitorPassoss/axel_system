@@ -48,7 +48,7 @@ SELECT
     sc.*,
     e.nome AS nome_empresa
 FROM 
-    solicitacao_compras sc
+    solicitacao_compras sc 
 JOIN 
     empresas e ON e.id = sc.empresa_id
 WHERE 
@@ -141,8 +141,6 @@ $result = $stmt->get_result();
           <tr class="">
             <th class="px-6 py-3 text-left text-sm uppercase">Solicitante</th>
             <th class="px-6 py-3 text-left text-sm uppercase">Status</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Valor Total</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Grau</th>
             <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
 
           </tr>
