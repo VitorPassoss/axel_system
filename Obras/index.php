@@ -17,8 +17,6 @@ if ($conn->connect_error) {
 
 $empresa_id = $_SESSION['empresa_id'];
 
-
-
 $sql = "
   SELECT 
     obras.*, 

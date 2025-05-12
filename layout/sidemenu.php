@@ -39,6 +39,8 @@
   }
 
 
+
+
   body {
     margin-left: 16%;
   }
@@ -53,12 +55,20 @@
       backdrop-filter: none;
       display: none;
     }
+
     body {
-    margin-left: 0%;
-  }
+      margin-left: 0%;
+    }
 
   }
 </style>
+
+<style>
+  li.group:hover>ul {
+    display: block;
+  }
+</style>
+
 
 <div id="sideMenu" class="  side-menu fixed top-0 left-[-100%] shadow-xl w-64 min-h-screen bg-[#FFFFFF] backdrop-blur-lg p-4 space-y-2 transition-all duration-300 ease-in-out transform rounded-lg z-30">
   <div class="flex justify-between items-center ">
@@ -92,6 +102,42 @@
     // Redirecionar para a página de login ou outra página
     window.location.href = "../onboard/login.php"; // Troque pelo URL do login ou onde você deseja redirecionar
   });
+</script>
+
+
+
+<script>
+  function getMenuWithDropdown(iconClass, title, items) {
+    const submenuId = `submenu-${title.toLowerCase().replace(/\s+/g, '-')}`;
+    return `
+    <li class="relative">
+      <div onclick="toggleSubmenu('${submenuId}')" class="flex items-center py-2 px-4 rounded cursor-pointer text-[#545D69] hover:bg-[#F3F5F7] hover:text-[#2B3A4B] transition-all">
+        <i style="color:rgb(168, 168, 168) !important;" class=" mr-3 text-white ${iconClass}"></i> ${title}
+        <i  class="fas fa-chevron-down ml-auto text-xs text-[#2B3A4B] group-hover:text-[#2B3A4B]"></i>
+      </div>
+      <ul id="${submenuId}" class="ml-6 mt-1 space-y-1 hidden">
+        ${items.map(sub => `
+          <li>
+            <a href="${sub.href}" class="flex items-center px-4 py-2 rounded text-[#545D69] hover:bg-[#E9EBED] hover:text-[#2B3A4B] transition-all">
+              <i class="${sub.icon}" style="color: #A5ABB3; margin-right: 0.75rem;"></i> ${sub.label}
+            </a>
+          </li>
+        `).join('')}
+      </ul>
+    </li>
+  `;
+  }
+</script>
+
+<script>
+  function toggleSubmenu(id) {
+    const submenu = document.getElementById(id);
+    if (submenu.classList.contains('hidden')) {
+      submenu.classList.remove('hidden');
+    } else {
+      submenu.classList.add('hidden');
+    }
+  }
 </script>
 
 
@@ -132,6 +178,7 @@
             menuHTML += `
               ${getMenuItem('../empresas', 'fas fa-diagram-project', 'Matriz e Filiais')}
               ${getMenuItem('../contratos', 'fas fa-diagram-project', 'Contratos')}
+
             `;
           }
 
@@ -143,6 +190,21 @@
               ${getMenuItem('../recursos', 'fas fa-shopping-cart', 'Solicitações')}
             `;
           }
+
+
+              if (['financeiro','gestão', 'tecnologia'].includes(setor_nome.toLowerCase())) {
+            menuHTML += `
+          ${getMenuWithDropdown('fas fa-money-check-alt', 'Centro de Custo', [
+            { href: '../transacoes', label: 'Entradas', icon: 'fas fa-arrow-circle-down' },
+            { href: '../transacoes/saidas.php', label: 'Saídas', icon: 'fas fa-arrow-circle-up' }
+          ])}
+        `;
+          }
+
+        
+    
+
+
 
           menuHTML += `</ul>`;
           document.getElementById('menuContainer').innerHTML = menuHTML;
@@ -188,7 +250,4 @@
       }
     })
     .catch(error => console.error('Erro:', error));
-
-
-
 </script>
