@@ -16,18 +16,28 @@ if ($conn->connect_error) {
 // Obter o ID da empresa do usuário logado
 $empresa_id = $_SESSION['empresa_id'];
 
-// Recuperar status
+// Recuperar status e armazenar em arrays reutilizáveis
 $status_sql = "SELECT * FROM status ORDER BY id";
 $status_result = $conn->query($status_sql);
+
+$status_lista = [];
+$status_nomes = [];
+$status_cores = [];
+
+while ($s = $status_result->fetch_assoc()) {
+    $status_lista[] = $s;
+    $status_nomes[$s['id']] = $s['nome'];
+    $status_cores[$s['id']] = $s['cor'];
+}
 
 // Recuperar projetos da empresa específica
 $projetos_sql = "SELECT p.*, s.nome AS status_nome 
                  FROM projetos p 
                  LEFT JOIN status s ON p.status_fk = s.id 
-                 WHERE p.empresa_id = ?"; // Filtra pelo ID da empresa
+                 WHERE p.empresa_id = ?";
 
 $stmt = $conn->prepare($projetos_sql);
-$stmt->bind_param("i", $empresa_id); // Bind do parâmetro empresa_id
+$stmt->bind_param("i", $empresa_id);
 $stmt->execute();
 $projetos_result = $stmt->get_result();
 
@@ -37,9 +47,24 @@ while ($projeto = $projetos_result->fetch_assoc()) {
     $projetos_por_status[$projeto['status_fk']][] = $projeto;
 }
 
+$total_projetos = 0;
+$contagem_status = [];
+$projetos_contrato = [];
+
+foreach ($projetos_por_status as $status_id => $projetos) {
+    $contagem_status[$status_id] = count($projetos);
+    $total_projetos += count($projetos);
+
+    foreach ($projetos as $proj) {
+        $tipo_contrato = $proj['tipo_contrato'] ?? 'Não informado';
+        $projetos_contrato[$tipo_contrato] = ($projetos_contrato[$tipo_contrato] ?? 0) + 1;
+    }
+}
+
 // Debug: Verifique se os projetos estão sendo organizados corretamente
 // var_dump($projetos_por_status);
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -77,6 +102,9 @@ while ($projeto = $projetos_result->fetch_assoc()) {
     <!-- Side Menu -->
     <?php include '../layout/sidemenu.php'; ?>
 
+
+
+
     <div class="flex-1 p-8 space-y-8 max-w-full">
         <!-- Cabeçalho -->
         <div class="flex flex-row justify-between items-center shadow bg-[#FFFFFF] py-4 px-6 rounded-2xl">
@@ -94,9 +122,12 @@ while ($projeto = $projetos_result->fetch_assoc()) {
 
         </div>
 
+
+
         <!-- Tabela -->
-        <div class="flex space-x-4 overflow-x-auto  px-4 py-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-            <?php while ($status = $status_result->fetch_assoc()): ?>
+        <!-- Quadro Kanban de Projetos -->
+        <div class="flex space-x-4 overflow-x-auto px-4 py-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+            <?php foreach ($status_lista as $status): ?>
                 <div class="w-[25%] bg-white rounded-lg shadow p-4 flex-shrink-0" style="background: <?= htmlspecialchars($status['cor']) ?>;">
                     <h2 class="text-lg font-bold mb-4">
                         <?= htmlspecialchars($status['nome']) ?>
@@ -117,7 +148,7 @@ while ($projeto = $projetos_result->fetch_assoc()) {
                         <?php endif; ?>
                     </div>
                 </div>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
         </div>
 
 

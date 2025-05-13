@@ -23,11 +23,14 @@ $sql = "
         c.numero_contrato, 
         c.numero_empenho, 
         c.nome_cliente, 
-        e.localizacao 
+        e.localizacao,
+        c.situacao
     FROM contratos c
     JOIN empresas e ON c.empresa_id = e.id
     WHERE c.empresa_id = ?
+    ORDER BY c.criado_em DESC
 ";
+
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $empresa_id);
 $stmt->execute();
@@ -95,6 +98,8 @@ $result = $stmt->get_result();
             <th class="px-6 py-3 text-left text-sm uppercase">N°Empenho</th>
             <th class="px-6 py-3 text-left text-sm uppercase">Cliente</th>
             <th class="px-6 py-3 text-left text-sm uppercase">Polo</th>
+            <th class="px-6 py-3 text-left text-sm uppercase">Situação</th>
+
             <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
           </tr>
         </thead>
@@ -105,6 +110,8 @@ $result = $stmt->get_result();
               <td class="px-6 py-4"><?php echo htmlspecialchars($row['numero_empenho']); ?></td>
               <td class="px-6 py-4"><?php echo htmlspecialchars($row['nome_cliente']); ?></td>
               <td class="px-6 py-4"><?php echo htmlspecialchars($row['localizacao']); ?></td>
+              <td class="px-6 py-4"><?php echo htmlspecialchars($row['situacao']); ?></td>
+
               <td class="px-6 py-4 text-center">
 
 

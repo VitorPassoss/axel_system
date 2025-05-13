@@ -21,6 +21,7 @@ try {
     $valor_mensal = $_POST['valor_mensal'] ?? null;
     $valor_anual = $_POST['valor_anual'] ?? null;
     $observacoes = $_POST['observacoes'] ?? '';
+    $situacao = $_POST['situacao'] ?? '';
 
     // ID da empresa vinculada ao usuário logado
     $empresa_id = $usuario['empresa_id'];
@@ -28,10 +29,10 @@ try {
     // Insere o contrato
     $stmt = $conn->prepare("INSERT INTO contratos (
         numero_contrato, numero_empenho, cnpj_cliente, nome_cliente, endereco_cliente,
-        telefone_cliente, email_cliente, valor_mensal, valor_anual, observacoes, empresa_id
+        telefone_cliente, email_cliente, valor_mensal, valor_anual, observacoes, empresa_id, situacao
     ) VALUES (
         :numero_contrato, :numero_empenho, :cnpj_cliente, :nome_cliente, :endereco_cliente,
-        :telefone_cliente, :email_cliente, :valor_mensal, :valor_anual, :observacoes, :empresa_id
+        :telefone_cliente, :email_cliente, :valor_mensal, :valor_anual, :observacoes, :empresa_id, :situacao
     )");
 
     $stmt->execute([
@@ -45,7 +46,9 @@ try {
         ':valor_mensal' => $valor_mensal,
         ':valor_anual' => $valor_anual,
         ':observacoes' => $observacoes,
-        ':empresa_id' => $empresa_id
+        ':empresa_id' => $empresa_id,
+        ':situacao' => $situacao
+
     ]);
 
     $contrato_id = $conn->lastInsertId(); // pega o ID do contrato recém inserido

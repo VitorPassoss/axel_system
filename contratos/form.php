@@ -136,6 +136,9 @@ if (isset($_GET['contrato_id'])) {
                             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
                     </div>
 
+
+
+
                     <div class="flex flex-col">
                         <label for="email_cliente" class="text-gray-700 mb-1 text-sm font-medium">Email do Cliente</label>
                         <input type="email" id="email_cliente" name="email_cliente"
@@ -157,6 +160,16 @@ if (isset($_GET['contrato_id'])) {
                             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
                     </div>
 
+                    <div class="flex flex-col">
+                        <label for="situacao" class="text-gray-700 mb-1 text-sm font-medium">Situação do Contrato</label>
+                        <select id="situacao" name="situacao" required
+                            class="w-full bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-100 p-2">
+                            <option value="" disabled selected>Selecione a situação</option>
+                            <option value="Ativo">🟢 Ativo</option>
+                            <option value="Inativo">🔴 Inativo</option>
+
+                        </select>
+                    </div>
                     <input type="file" id="anexos" name="anexos[]" multiple />
 
 

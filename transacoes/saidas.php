@@ -229,7 +229,7 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
     const formData = new FormData(form);
 
     try {
-      const response = await fetch('./create.php', {
+      const response = await fetch('./saida.php', {
         method: 'POST',
         body: formData
       });

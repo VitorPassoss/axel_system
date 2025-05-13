@@ -45,14 +45,23 @@ if (!empty($filtro_obra)) {
 // Consulta final com joins
 $sql = "
 SELECT 
-    sc.*,
+    sc.id,
+    sc.os_id,
+    sc.solicitante,
+    sc.empresa_id,
+    sc.valor,
+    sc.status,
+    sc.grau,
+    sc.criado_em,
+    sc.descricao,
+    sc.aprovado_por,
+    sc.aprovado_em,
     e.nome AS nome_empresa
 FROM 
     solicitacao_compras sc 
 JOIN 
     empresas e ON e.id = sc.empresa_id
-WHERE 
-    sc.empresa_id = ?
+$where
 ORDER BY 
     sc.id DESC
 ";
@@ -106,9 +115,6 @@ $result = $stmt->get_result();
       <div class="">
         <h1 class="text-3xl font-bold text-primary">Solicitações de Compras</h1>
       </div>
-      <button onclick="toggleModal()" class="mt-4  bg-primary  py-2 px-8 rounded-lg font-semibold transition text-white">
-        + Adicionar
-      </button>
 
 
     </div>
@@ -138,67 +144,253 @@ $result = $stmt->get_result();
 
       <table class="min-w-full divide-y divide-gray-200">
         <thead>
-          <tr class="">
+          <tr>
+            <th class="w-10"></th> <!-- Coluna do ícone dropdown -->
             <th class="px-6 py-3 text-left text-sm uppercase">Solicitante</th>
+            <th class="px-6 py-3 text-left text-sm uppercase">Valor</th>
             <th class="px-6 py-3 text-left text-sm uppercase">Status</th>
+            <th class="px-6 py-3 text-left text-sm uppercase">Criado em</th>
+            <th class="px-6 py-3 text-left text-sm uppercase">Aprovado Por</th>
+            <th class="px-6 py-3 text-left text-sm uppercase">Aprovado Em</th>
             <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
-
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
-          <?php while ($row = $result->fetch_assoc()) { ?>
+          <?php while ($row = $result->fetch_assoc()) {
+            $id = $row['id'];
+          ?>
             <tr class="hover:bg-gray-100">
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['solicitante']); ?></td>
-
-
-              <?php
-              $status = htmlspecialchars($row['status']);
-              $bgColor = match ($status) {
-                'PENDENTE'     => 'bg-blue-100 text-blue-800',
-                'COTAÇÃO'     => 'bg-blue-100 text-blue-800',
-                'Em andamento'  => 'bg-yellow-100 text-yellow-800',
-                'APROVADO'     => 'bg-green-100 text-green-800',
-                'PAGO'     => 'bg-green-100 text-green-800',
-                'REJEITADO'     => 'bg-red-100 text-red-800',
-                default         => 'bg-gray-100 text-gray-800',
-              };
-              ?>
+              <td class="text-center">
+                <button id="btn-<?= $id ?>" onclick="toggleDropdown(<?= $id ?>)">
+                  <i class="fas fa-chevron-down text-gray-500"></i>
+                </button>
+              </td>
+              <td class="px-6 py-4"><?= htmlspecialchars($row['solicitante']) ?></td>
+              <td class="px-6 py-4">R$ <?= number_format($row['valor'], 2, ',', '.') ?></td>
               <td class="px-6 py-4">
+                <?php
+                $status = htmlspecialchars($row['status']);
+                $bgColor = match (strtoupper($status)) {
+                  'PENDENTE', 'COTAÇÃO' => 'bg-blue-100 text-blue-800',
+                  'EM ANDAMENTO'        => 'bg-yellow-100 text-yellow-800',
+                  'APROVADO', 'PAGO'    => 'bg-green-100 text-green-800',
+                  'REJEITADO'           => 'bg-red-100 text-red-800',
+                  default               => 'bg-gray-100 text-gray-800',
+                };
+
+                // Texto que será exibido
+                $statusDisplay = strtoupper($status) === 'APROVADO' ? 'APROVADO P/COTAÇÃO' : $status;
+                ?>
                 <span class="px-3 py-1 rounded-full text-sm font-semibold <?= $bgColor ?>">
-                  <?= $status ?>
+                  <?= $statusDisplay ?>
                 </span>
               </td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['valor']); ?></td>
 
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['grau']); ?></td>
-
+              <td class="px-6 py-4"><?= date('d/m/Y H:i', strtotime($row['criado_em'])) ?></td>
+              <td class="px-6 py-4"><?= htmlspecialchars($row['aprovado_por'] ?? '-') ?></td>
+              <td class="px-6 py-4"><?= $row['aprovado_em'] ? date('d/m/Y H:i', strtotime($row['aprovado_em'])) : '-' ?></td>
               <td class="px-6 py-4 text-center">
-                <button onclick="visualizarProjeto(<?php echo $row['id']; ?>)" class=" hover:underline ml-2">
-                  <i class="fas fa-eye mr-3 text-gray-500"></i>
+                <?php
+                $status = strtoupper($row['status']);
+                $buttonText = ($status === 'APROVADO') ? 'Iniciar Cotação' : 'Aprovar Solicitação';
+                ?>
 
+                <button onclick="handleButtonClick(<?= $id ?>, '<?= $status ?>')" class="hover:underline ml-2 bg-green-600 text-[12px] p-2 rounded text-white">
+                  <?= $buttonText ?>
                 </button>
 
+                <form id="delete-<?= $id ?>" class="inline" onsubmit="return false;">
+                  <input type="hidden" name="id" value="<?= $id ?>">
 
-                <form id="delete-<?php echo $row['id']; ?>" class="inline" onsubmit="return false;">
-                  <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
-                  <button type="button" class="text-red-500 hover:underline ml-2" onclick="deleteContrato(<?php echo $row['id']; ?>)">
-                    <i class="fas fa-trash mr-1"></i>
-                  </button>
                 </form>
-
               </td>
+            </tr>
 
+            <!-- Linha expandida (opcional) -->
+            <tr id="dropdown-<?= $id ?>" class="hidden bg-gray-50">
+              <td colspan="12" class="px-6 py-4">
+                <div class="text-sm">
+                  <strong>Mais detalhes do item:</strong>
+                  <div id="detalhes-<?= $id ?>" class="mt-2 text-gray-700">
+                    <em>Carregando...</em>
+                  </div>
+                </div>
+              </td>
             </tr>
           <?php } ?>
         </tbody>
       </table>
+
     </div>
 
   </div>
 
+  <div id="modalCotacao" class="fixed inset-0 flex  z-50 items-center justify-center bg-gray-800 bg-opacity-50 hidden">
+    <div class="bg-white p-4 rounded w-96">
+      <h3 class="text-lg font-semibold mb-4">Iniciar Cotação</h3>
+      <form action="processar_cotacao.php" method="POST">
+        <div class="mb-4">
+          <label for="fornecedor" class="block text-sm font-medium text-gray-700">Fornecedor</label>
+          <input type="text" name="fornecedor" id="fornecedor" class="w-full p-2 border rounded" required>
+        </div>
+        <div class="mb-4">
+          <label for="valor" class="block text-sm font-medium text-gray-700">Valor</label>
+          <input type="number" name="valor" id="valor" class="w-full p-2 border rounded" required>
+        </div>
+        <input type="hidden" name="solicitacao_id" value="<?= $id ?>">
+        <div class="flex justify-end">
+          <button type="submit" class="bg-blue-600 text-white p-2 rounded">Enviar Cotação</button>
+          <button type="button" onclick="fecharModal('modalCotacao')" class="ml-2 p-2 rounded bg-red-600 text-white">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Aprovação -->
+  <div id="modal-aprovar" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+      <h2 class="text-lg font-semibold mb-4">Aprovar Solicitação</h2>
+      <input type="hidden" id="modal-id-solicitacao">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Nome de quem está aprovando:</label>
+      <input type="text" id="input-aprovador" class="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring focus:border-blue-500" placeholder="Digite seu nome">
+      <div class="flex justify-end space-x-2">
+        <button onclick="fecharModal('modal-aprovar')" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Cancelar</button>
+        <button onclick="enviarAprovacao()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Aprovar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function handleButtonClick(id, status) {
+      if (status === 'APROVADO') {
+        abrirModalCotacao();
+      } else {
+        abrirModalAprovacao(id);
+      }
+    }
+
+    function abrirModalCotacao() {
+      document.getElementById('modalCotacao').classList.remove('hidden');
+    }
+
+    function abrirModalAprovacao(id) {
+      document.getElementById('modal-aprovar').classList.remove('hidden');
+      document.getElementById('modal-id-solicitacao').value = id;
+      document.getElementById('input-aprovador').value = '';
+    }
+
+    function fecharModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    function enviarAprovacao() {
+      // Lógica para enviar a aprovação (você pode adicionar o código de envio aqui)
+      alert('Solicitação aprovada');
+      fecharModal('modal-aprovar');
+    }
+  </script>
 
 
 
+  <script>
+    function toggleDropdown(id) {
+      const row = document.getElementById('dropdown-' + id);
+      const detalhesDiv = document.getElementById('detalhes-' + id);
+      const iconBtn = document.querySelector('#btn-' + id + ' i');
+
+      const isHidden = row.classList.contains('hidden');
+
+      if (iconBtn) {
+        iconBtn.classList.remove('fa-chevron-down', 'fa-chevron-up');
+        iconBtn.classList.add(isHidden ? 'fa-chevron-up' : 'fa-chevron-down');
+      }
+
+      if (isHidden) {
+        row.classList.remove('hidden');
+
+        if (!detalhesDiv.dataset.loaded) {
+          detalhesDiv.innerHTML = "<em>Carregando...</em>";
+
+          fetch('./get_detalhes_json.php?id=' + id)
+            .then(res => res.json())
+            .then(data => {
+              detalhesDiv.innerHTML = `
+  <div class="grid gap-4 text-sm text-gray-700">
+    <div class="grid grid-cols-2 gap-2 bg-gray-50 p-4 rounded shadow">
+      <div><strong>Solicitante:</strong> ${data.solicitante}</div>
+      <div><strong>Status:</strong> ${data.status}</div>
+      <div><strong>Descrição:</strong> ${data.descricao}</div>
+      <div><strong>Valor:</strong> R$ ${data.valor}</div>
+      <div><strong>Criado em:</strong> ${data.criado_em}</div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2 bg-white p-4 rounded shadow border">
+      <div><strong>Empresa:</strong> ${data.empresa.nome}</div>
+      <div><strong>CNPJ:</strong> ${data.empresa.cnpj}</div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2 bg-white p-4 rounded shadow border">
+      <div><strong>Número Contrato:</strong> ${data.obra.numero_contrato}</div>
+      
+    </div>
+
+        <div class="grid grid-cols-2 gap-2 bg-gray-50 p-4 rounded shadow">
+      <div><strong>Obra:</strong> ${data.obra.nome}</div>
+      <div><strong>CEP:</strong> ${data.obra.cep}</div>
+    </div>
+
+     <div class="bg-white p-4 rounded shadow border">
+      <h3 class="font-semibold mb-2 text-gray-800">Insumos Solicitados</h3>
+      <ul class="space-y-2">
+        ${data.itens.map(item => `
+          <li class="border rounded p-2">
+            <div><strong>Nome:</strong> ${item.insumo_nome}</div>
+            <div><strong>Quantidade:</strong> ${item.quantidade}</div>
+            <div><strong>Grau:</strong> ${item.grau}</div>
+
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+
+
+    <div class="grid grid-cols-2 gap-2 bg-gray-50 p-4 rounded shadow">
+      <div><strong>Ordem de Serviço:</strong> ${data.ordem_de_servico.numero_os || data.ordem_de_servico.id}</div>
+      <div><strong>Status OS:</strong> ${data.ordem_de_servico.status}</div>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow border">
+      <h3 class="font-semibold mb-2 text-gray-800">Serviços da OS:</h3>
+      <ul class="space-y-2">
+        ${data.ordem_de_servico.servicos.map(servico => `
+          <li class="border rounded p-2">
+            <div><strong>Nome:</strong> ${servico.nome}</div>
+            <div><strong>Tipo:</strong> ${servico.tipo}</div>
+            <div><strong>Quantidade:</strong> ${servico.quantidade} ${servico.und}</div>
+            <div><strong>Executor:</strong> ${servico.executor}</div>
+            <div><strong>Início:</strong> ${servico.inicio || '-'}</div>
+            <div><strong>Final:</strong> ${servico.final || '-'}</div>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+
+
+  </div>
+`;
+
+              detalhesDiv.dataset.loaded = "true";
+            })
+            .catch(err => {
+              console.error(err);
+              detalhesDiv.innerHTML = '<p class="text-red-500">Erro ao carregar detalhes.</p>';
+            });
+        }
+      } else {
+        row.classList.add('hidden');
+      }
+    }
+  </script>
 
 
   <script>

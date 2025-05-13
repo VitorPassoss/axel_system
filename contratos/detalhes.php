@@ -49,6 +49,97 @@ if (isset($_GET['contrato_id'])) {
         $projetos = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 }
+
+
+$stmt = $conn->prepare("
+    SELECT status, COUNT(*) as total 
+    FROM ordem_de_servico 
+    WHERE contrato_id = ? 
+    GROUP BY status
+");
+$stmt->bind_param("i", $contrato_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$status_labels = [];
+$status_counts = [];
+
+while ($row = $result->fetch_assoc()) {
+    $status_labels[] = $row['status'];
+    $status_counts[] = $row['total'];
+}
+
+
+$stmt = $conn->prepare("
+    SELECT s.nome as status, COUNT(*) as total
+    FROM obras o
+    JOIN status_obras s ON o.status_id = s.id
+    WHERE o.contrato_id = ?
+    GROUP BY s.nome
+");
+$stmt->bind_param("i", $contrato_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$status_obras_labels = [];
+$status_obras_counts = [];
+
+while ($row = $result->fetch_assoc()) {
+    $status_obras_labels[] = $row['status'];
+    $status_obras_counts[] = $row['total'];
+}
+
+$stmt = $conn->prepare("
+    SELECT o.nome AS obra_nome, COUNT(sc.id) AS total_solicitacoes
+    FROM solicitacao_compras sc
+    JOIN ordem_de_servico os ON sc.os_id = os.id
+    JOIN obras o ON os.obra_id = o.id
+    WHERE o.contrato_id = ?
+    GROUP BY o.id
+");
+$stmt->bind_param("i", $contrato_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$obras_labels = [];
+$obras_solicitacoes_counts = [];
+
+while ($row = $result->fetch_assoc()) {
+    $obras_labels[] = $row['obra_nome'];
+    $obras_solicitacoes_counts[] = $row['total_solicitacoes'];
+}
+
+
+$stmt = $conn->prepare("
+    SELECT o.nome AS obra_nome, COUNT(os.id) AS total_ordens_servico
+    FROM ordem_de_servico os
+    JOIN obras o ON os.obra_id = o.id
+    WHERE o.contrato_id = ?
+    GROUP BY o.id
+");
+$stmt->bind_param("i", $contrato_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$obras_ordens_labels = [];
+$obras_ordens_counts = [];
+
+while ($row = $result->fetch_assoc()) {
+    $obras_ordens_labels[] = $row['obra_nome'];
+    $obras_ordens_counts[] = $row['total_ordens_servico'];
+}
+
+
+// Definindo as cores para os diferentes status
+$status_cores = [
+    'Em Andamento' => 'rgba(54, 162, 235, 0.6)',
+    'Concluída' => 'rgba(75, 192, 192, 0.6)',
+    'Cancelada' => 'rgba(255, 99, 132, 0.6)',
+    'Aguardando' => 'rgba(255, 159, 64, 0.6)',
+    'Suspensa' => 'rgba(153, 102, 255, 0.6)',
+];
+
+
 ?>
 
 
@@ -319,11 +410,200 @@ if (isset($_GET['contrato_id'])) {
                         <p class="text-gray-500">Nenhum documento encontrado.</p>
                     <?php endif; ?>
                     <?php $stmt_docs->close(); ?>
+
+
+
+
+
+
                 </div>
             <?php endif; ?>
 
+
+            <div class="p-6">
+                <h1 class="text-2xl font-bold mb-6">Dashboard do Contrato</h1>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Gráfico de Ordens de Serviço -->
+                    <div class="bg-white shadow-lg rounded-lg p-[30px] flex flex-col items-center">
+                        <h2 class="text-lg font-semibold mb-4">Ordens de Serviço por Status</h2>
+                        <canvas id="graficoPizzaOS" class=""></canvas> <!-- largura e altura reduzidas -->
+                    </div>
+
+                    <!-- Gráfico de Obras por Status -->
+                    <div class="bg-white shadow-lg rounded-lg p-8 flex flex-col items-center">
+                        <h2 class="text-lg font-semibold mb-4">Obras por Status</h2>
+                        <canvas id="graficoObrasStatus" class="h-[300px]"></canvas> <!-- largura máxima controlada -->
+                    </div>
+
+                    <div class="bg-white shadow-lg rounded-lg p-8 flex flex-col items-center">
+                        <h2 class="text-lg font-semibold mb-4">Solicitação de Insumos por Obra</h2>
+                        <canvas id="graficoSolicitacoesObras" class="h-[300px]"></canvas>
+                    </div>
+
+                    <!-- Gráfico de Ordens de Serviço por Obra -->
+                    <div class=" bg-white shadow-lg rounded-lg p-8 mt-6">
+                        <h2 class="text-lg font-semibold mb-4 text-center">Ordens de Serviço por Obra</h2>
+                        <canvas id="graficoOrdensPorObra" class="  w-full h-[200px]"></canvas>
+                    </div>
+
+
+                </div>
+            </div>
+
+
+            <!-- Inclui a lib Chart.js via CDN -->
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         </div>
     </div>
+
+    <!-- Inclui a lib Chart.js via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+
+
+    <script>
+        const ctxOrdensPorObra = document.getElementById('graficoOrdensPorObra').getContext('2d');
+        const statusCores = <?= json_encode($status_cores) ?>; // Passando as cores definidas do PHP para o JS
+
+        new Chart(ctxOrdensPorObra, {
+            type: 'bar',
+            data: {
+                labels: <?= json_encode($obras_ordens_labels) ?>,
+                datasets: [{
+                    label: 'Ordens de Serviço',
+                    data: <?= json_encode($obras_ordens_counts) ?>,
+                    backgroundColor: <?= json_encode(array_values($status_cores)) ?>, // Utilizando as cores no gráfico
+                    borderColor: 'rgba(0, 0, 0, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y', // <-- isso deixa o gráfico deitado
+                responsive: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Ordens de Serviço por Obra'
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+    <script>
+        const ctxSolicitacoesObras = document.getElementById('graficoSolicitacoesObras').getContext('2d');
+        const coresSolicitacoes = ['rgba(54, 162, 235, 0.6)', 'rgba(255, 99, 132, 0.6)', 'rgba(75, 192, 192, 0.6)', 'rgba(255, 159, 64, 0.6)']; // Cores personalizadas para as solicitações
+
+        new Chart(ctxSolicitacoesObras, {
+            type: 'bar',
+            data: {
+                labels: <?= json_encode($obras_labels) ?>,
+                datasets: [{
+                    label: 'Solicitações de Compra',
+                    data: <?= json_encode($obras_solicitacoes_counts) ?>,
+                    backgroundColor: coresSolicitacoes, // Cores aplicadas
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Solicitações por Obra'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+    <script>
+        const osCtx = document.getElementById('graficoPizzaOS').getContext('2d');
+        const obrasCtx = document.getElementById('graficoObrasStatus').getContext('2d');
+
+        // Gráfico de Pizza - Ordens de Serviço
+        new Chart(osCtx, {
+            type: 'pie',
+            data: {
+                labels: <?php echo json_encode($status_labels); ?>,
+                datasets: [{
+                    label: 'Ordens de Serviço',
+                    data: <?php echo json_encode($status_counts); ?>,
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Ordens de Serviço por Status'
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Barras - Obras por Status
+        new Chart(obrasCtx, {
+            type: 'bar',
+            data: {
+                labels: <?php echo json_encode($status_obras_labels); ?>,
+                datasets: [{
+                    label: 'Obras',
+                    data: <?php echo json_encode($status_obras_counts); ?>,
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'], // Cores personalizadas por status
+                    borderRadius: 5,
+                }]
+            },
+            options: {
+                responsive: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Obras por Status'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+
 
 
     <script>
