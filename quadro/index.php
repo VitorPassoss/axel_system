@@ -141,16 +141,16 @@ while ($projeto = $projetos_result->fetch_assoc()) {
                 const statusId = event.currentTarget.getAttribute('data-status-id');
                 event.currentTarget.appendChild(obraArrastada);
 
-                const obraId = obraArrastada.id.replace('obra-', '');
+                const obraId = obraArrastada.id.replace('projeto-', '');
 
 
-                fetch('./atualizar_status_obra.php', {
+                fetch('./atualizar_status.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            obra_id: obraId,
+                            projeto_id: obraId,
                             status_id: statusId
                         })
                     })
