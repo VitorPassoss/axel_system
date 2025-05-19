@@ -85,7 +85,7 @@ if (isset($_GET['sc_id'])) {
             </button>
 
             <!-- Cabeçalho -->
-            <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-6 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-black mb-6 text-center">
                 Detalhes da Solicitação
             </h2>
 

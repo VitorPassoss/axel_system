@@ -22,6 +22,8 @@ try {
     $valor_anual = $_POST['valor_anual'] ?? null;
     $observacoes = $_POST['observacoes'] ?? '';
     $situacao = $_POST['situacao'] ?? '';
+    $dt_inicio = $_POST['dt_inicio'] ?? null;
+    $dt_fim = $_POST['dt_fim'] ?? null;
 
     // ID da empresa vinculada ao usuário logado
     $empresa_id = $usuario['empresa_id'];
@@ -29,10 +31,10 @@ try {
     // Insere o contrato
     $stmt = $conn->prepare("INSERT INTO contratos (
         numero_contrato, numero_empenho, cnpj_cliente, nome_cliente, endereco_cliente,
-        telefone_cliente, email_cliente, valor_mensal, valor_anual, observacoes, empresa_id, situacao
+        telefone_cliente, email_cliente, valor_mensal, valor_anual, observacoes, empresa_id, situacao, dt_inicio, dt_fim
     ) VALUES (
         :numero_contrato, :numero_empenho, :cnpj_cliente, :nome_cliente, :endereco_cliente,
-        :telefone_cliente, :email_cliente, :valor_mensal, :valor_anual, :observacoes, :empresa_id, :situacao
+        :telefone_cliente, :email_cliente, :valor_mensal, :valor_anual, :observacoes, :empresa_id, :situacao, :dt_inicio, :dt_fim
     )");
 
     $stmt->execute([
@@ -47,7 +49,9 @@ try {
         ':valor_anual' => $valor_anual,
         ':observacoes' => $observacoes,
         ':empresa_id' => $empresa_id,
-        ':situacao' => $situacao
+        ':situacao' => $situacao,
+        ':dt_inicio' => $dt_inicio,
+        ':dt_fim' => $dt_fim,
 
     ]);
 

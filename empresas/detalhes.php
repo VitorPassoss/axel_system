@@ -75,7 +75,7 @@ if (isset($_GET['empresa_id'])) {
             </button>
 
             <!-- Cabeçalho -->
-            <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-6 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-black mb-6 text-center">
                 Detalhes da Empresa
             </h2>
 

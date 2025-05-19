@@ -24,7 +24,9 @@ $sql = "
         c.numero_empenho, 
         c.nome_cliente, 
         e.localizacao,
-        c.situacao
+        c.situacao,
+        c.dt_inicio,
+        c.dt_fim
     FROM contratos c
     JOIN empresas e ON c.empresa_id = e.id
     WHERE c.empresa_id = ?
@@ -98,6 +100,9 @@ $result = $stmt->get_result();
             <th class="px-6 py-3 text-left text-sm uppercase">N°Empenho</th>
             <th class="px-6 py-3 text-left text-sm uppercase">Cliente</th>
             <th class="px-6 py-3 text-left text-sm uppercase">Polo</th>
+            <th class="px-6 py-3 text-left text-sm uppercase">Data Inicio</th>
+            <th class="px-6 py-3 text-left text-sm uppercase">Data Fim</th>
+
             <th class="px-6 py-3 text-left text-sm uppercase">Situação</th>
 
             <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
@@ -110,6 +115,9 @@ $result = $stmt->get_result();
               <td class="px-6 py-4"><?php echo htmlspecialchars($row['numero_empenho']); ?></td>
               <td class="px-6 py-4"><?php echo htmlspecialchars($row['nome_cliente']); ?></td>
               <td class="px-6 py-4"><?php echo htmlspecialchars($row['localizacao']); ?></td>
+              <td class="px-6 py-4"><?php echo htmlspecialchars(date('d/m/Y', strtotime($row['dt_inicio']))); ?></td>
+              <td class="px-6 py-4"><?php echo htmlspecialchars(date('d/m/Y', strtotime($row['dt_fim']))); ?></td>
+
               <td class="px-6 py-4"><?php echo htmlspecialchars($row['situacao']); ?></td>
 
               <td class="px-6 py-4 text-center">

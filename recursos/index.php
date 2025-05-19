@@ -56,11 +56,20 @@ SELECT
     sc.descricao,
     sc.aprovado_por,
     sc.aprovado_em,
-    e.nome AS nome_empresa
+    e.nome AS nome_empresa,
+    os.id AS os_id,
+    o.nome AS nome_obra,
+    c.numero_contrato
 FROM 
-    solicitacao_compras sc 
+    solicitacao_compras sc
 JOIN 
     empresas e ON e.id = sc.empresa_id
+LEFT JOIN 
+    ordem_de_servico os ON os.id = sc.os_id
+LEFT JOIN 
+    obras o ON o.id = os.obra_id
+LEFT JOIN 
+    contratos c ON c.id = os.contrato_id
 $where
 ORDER BY 
     sc.id DESC
@@ -111,7 +120,7 @@ $result = $stmt->get_result();
 
   <div class="flex-1 p-8 space-y-8">
     <!-- Cabeçalho -->
-    <div class="flex flex-row justify-between items-center justify-center shadow  bg-[#FFFFFF] py-4 px-6 rounded-2xl ">
+    <div class="flex flex-row justify-between items-center justify-center shadow  bg-[#FFFFFF] py-6 px-6 rounded-2xl ">
       <div class="">
         <h1 class="text-3xl font-bold text-primary">Fluxo de Compras</h1>
       </div>
@@ -141,33 +150,27 @@ $result = $stmt->get_result();
         <!-- Botão de Filtro -->
 
       </form>
-
       <table class="min-w-full divide-y divide-gray-200">
         <thead>
           <tr>
-            <th class="w-10"></th> <!-- Coluna do ícone dropdown -->
-            <th class="px-6 py-3 text-left text-sm uppercase">Solicitante</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Valor</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Status</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Criado em</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Aprovado Por</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Aprovado Em</th>
-            <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
+            <th class="px-4 py-3 text-left text-sm uppercase">Solicitante</th>
+            <th class="px-4 py-3 text-left text-sm uppercase">Obra</th>
+            <th class="px-4 py-3 text-left text-sm uppercase">Contrato</th>
+            <th class="px-4 py-3 text-left text-sm uppercase">O.S</th>
+            <th class="px-4 py-1 text-left text-sm uppercase">Status</th>
+            <th class="px-4 py-3 text-center text-sm uppercase w-[160px]">Ações</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
           <?php while ($row = $result->fetch_assoc()) {
             $id = $row['id'];
           ?>
-            <tr class="hover:bg-gray-100">
-              <td class="text-center">
-                <button id="btn-<?= $id ?>" onclick="toggleDropdown(<?= $id ?>)">
-                  <i class="fas fa-chevron-down text-gray-500"></i>
-                </button>
-              </td>
-              <td class="px-6 py-4"><?= htmlspecialchars($row['solicitante']) ?></td>
-              <td class="px-6 py-4">R$ <?= number_format($row['valor'], 2, ',', '.') ?></td>
-              <td class="px-6 py-4">
+            <tr class="hover:bg-gray-100" id="btn-<?= $id ?>" onclick="toggleDropdown(<?= $id ?>)">
+              <td class="px-4 py-2"><?= htmlspecialchars($row['solicitante']) ?></td>
+              <td class="px-4 py-2"><?= htmlspecialchars($row['nome_obra'] ?? '-') ?></td>
+              <td class="px-4 py-2"><?= htmlspecialchars($row['numero_contrato'] ?? '-') ?></td>
+              <td class="px-4 py-2"><?= htmlspecialchars($row['os_id'] ?? '-') ?></td>
+              <td class="px-4 py-2">
                 <?php
                 $status = htmlspecialchars($row['status']);
                 $bgColor = match (strtoupper($status)) {
@@ -177,31 +180,22 @@ $result = $stmt->get_result();
                   'REJEITADO'           => 'bg-red-100 text-red-800',
                   default               => 'bg-gray-100 text-gray-800',
                 };
-
-                // Texto que será exibido
                 $statusDisplay = strtoupper($status) === 'APROVADO' ? 'APROVADO P/COTAÇÃO' : $status;
                 ?>
-                <span class="px-3 py-1 rounded-full text-sm font-semibold <?= $bgColor ?>">
+                <span class="px-3 py-1 rounded-full text-[12px] font-semibold <?= $bgColor ?>">
                   <?= $statusDisplay ?>
                 </span>
               </td>
-
-              <td class="px-6 py-4"><?= date('d/m/Y H:i', strtotime($row['criado_em'])) ?></td>
-              <td class="px-6 py-4"><?= htmlspecialchars($row['aprovado_por'] ?? '-') ?></td>
-              <td class="px-6 py-4"><?= $row['aprovado_em'] ? date('d/m/Y H:i', strtotime($row['aprovado_em'])) : '-' ?></td>
-              <td class="px-6 py-4 text-center">
+              <td class="px-4 py-2 text-center">
                 <?php
                 $status = strtoupper($row['status']);
-                $buttonText = ($status === 'APROVADO') ? 'Iniciar Cotação' : 'Aprovar Solicitação';
+                $buttonText = ($status === 'APROVADO') ? 'Aguardando Cotação' : 'Aprovar Solicitação';
                 ?>
-
-                <button onclick="handleButtonClick(<?= $id ?>, '<?= $status ?>')" class="hover:underline ml-2 bg-green-600 text-[12px] p-2 rounded text-white">
+                <button onclick="handleButtonClick(<?= $id ?>, '<?= $status ?>')" class="bg-green-600 text-[10px] p-2 rounded text-white">
                   <?= $buttonText ?>
                 </button>
-
                 <form id="delete-<?= $id ?>" class="inline" onsubmit="return false;">
                   <input type="hidden" name="id" value="<?= $id ?>">
-
                 </form>
               </td>
             </tr>
@@ -260,6 +254,7 @@ $result = $stmt->get_result();
     </div>
   </div>
 
+
   <script>
     function handleButtonClick(id, status) {
       if (status === 'APROVADO') {
@@ -283,10 +278,41 @@ $result = $stmt->get_result();
       document.getElementById(modalId).classList.add('hidden');
     }
 
-    function enviarAprovacao() {
-      // Lógica para enviar a aprovação (você pode adicionar o código de envio aqui)
-      alert('Solicitação aprovada');
-      fecharModal('modal-aprovar');
+    async function enviarAprovacao() {
+      const id = parseInt(document.getElementById('modal-id-solicitacao').value, 10);
+      const aprovador = document.getElementById('input-aprovador').value.trim();
+
+      if (!id || aprovador === '') {
+        alert('Por favor, informe seu nome para aprovação.');
+        return;
+      }
+
+      try {
+        const response = await fetch('./aprovar.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id,
+            aprovador
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+
+          fecharModal('modal-aprovar');
+          window.location.reload()
+          // Aqui você pode adicionar uma lógica para atualizar a lista ou a linha da solicitação aprovada
+          // Exemplo: recarregar a página ou atualizar o status via JS
+        } else {
+          alert('Erro ao aprovar: ' + (data.error || 'Erro desconhecido'));
+        }
+      } catch (error) {
+        alert('Erro ao enviar a aprovação: ' + error.message);
+      }
     }
   </script>
 
@@ -316,7 +342,7 @@ $result = $stmt->get_result();
             .then(data => {
               detalhesDiv.innerHTML = `
   <div class="grid gap-4 text-sm text-gray-700">
-    <div class="grid grid-cols-2 gap-2 bg-gray-50 p-4 rounded shadow">
+    <div class="grid grid-cols-2 gap-2  p-4 rounded shadow bg-white">
       <div><strong>Solicitante:</strong> ${data.solicitante}</div>
       <div><strong>Status:</strong> ${data.status}</div>
       <div><strong>Descrição:</strong> ${data.descricao}</div>

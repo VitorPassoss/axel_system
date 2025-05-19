@@ -77,7 +77,7 @@ if (isset($_GET['projeto_id'])) {
 
             <!-- Cabeçalho -->
             <!-- Cabeçalho -->
-            <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-6 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-black mb-6 text-center">
                 Novo Projeto
 
             </h2>

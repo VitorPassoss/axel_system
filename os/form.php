@@ -106,7 +106,7 @@ while ($row = $resultServicos->fetch_assoc()) {
 
             <!-- Cabeçalho -->
             <!-- Cabeçalho -->
-            <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-6 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-black mb-6 text-center">
                 Registrar O.S
             </h2>
 
@@ -114,6 +114,12 @@ while ($row = $resultServicos->fetch_assoc()) {
             <form method="POST" enctype="multipart/form-data" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
+                    <div class="flex flex-col">
+                        <label for="descricao" class="text-gray-700 mb-1 text-sm font-medium">Descrição da Os</label>
+                        <input type="text" id="descricao" name="descricao"
+                            value="<?= htmlspecialchars($os['descricao'] ?? '') ?>"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
+                    </div>
 
                     <div class="flex flex-col">
                         <label for="responsavel" class="text-gray-700 mb-1 text-sm font-medium">Responsavel</label>
@@ -161,14 +167,6 @@ while ($row = $resultServicos->fetch_assoc()) {
 
 
                     <div class="flex flex-col">
-                        <label for="Equipe" class="text-gray-700 mb-1 text-sm font-medium">Equipe</label>
-                        <input type="text" step="0.01" id="equipe" name="equipe" required
-                            value="<?= htmlspecialchars($os['equipe'] ?? '') ?>"
-                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
-                    </div>
-
-
-                    <div class="flex flex-col">
                         <label for="local" class="text-gray-700 mb-1 text-sm font-medium">Local</label>
                         <input type="text" step="0.01" id="local" name="local" required
                             value="<?= htmlspecialchars($os['local'] ?? '') ?>"
@@ -209,7 +207,7 @@ while ($row = $resultServicos->fetch_assoc()) {
 
 
                 <div class="w-full bg-white p-6 rounded-lg shadow-lg w-full">
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-6 text-start">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-black mb-6 text-start">
                         Serviços Vinculados
                     </h2>
                     <!-- Botão para abrir o modal, alterando o tipo para "button" para evitar o envio do formulário -->
@@ -298,7 +296,7 @@ while ($row = $resultServicos->fetch_assoc()) {
 
                 <!-- Executor -->
                 <div class="mb-4">
-                    <label for="executor" class="block text-sm font-medium text-gray-700">Executor</label>
+                    <label for="executor" class="block text-sm font-medium text-gray-700">Equipe</label>
                     <input type="text" id="executor" name="executor" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
                 </div>
 

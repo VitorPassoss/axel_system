@@ -22,7 +22,7 @@ if ($conn->connect_error) {
 
 // Função de inserção na tabela ordem_de_servico
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $descricao       = $conn->real_escape_string($_POST['descricao'] ?? '');
+    $descricao       = $conn->real_escape_string(string: $_POST['descricao'] ?? '');
     $local           = $conn->real_escape_string($_POST['local'] ?? '');
     $numero_os       = $conn->real_escape_string($_POST['numero_os'] ?? '');
     $responsavel_os  = $conn->real_escape_string($_POST['responsavel_os'] ?? '');
@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $servico_id = $row_servico['id'];
                     } else {
                         // Serviço não existe, cria um novo
-                        $sql_insert_servico = "INSERT INTO servicos (nome, unidade) VALUES ('" . $conn->real_escape_string($servico_nome) . "', '" . $conn->real_escape_string($servico['unidade']) . "')";
+                        $sql_insert_servico = "INSERT INTO servicos (nome) VALUES ('" . $conn->real_escape_string($servico_nome) . "')";
                         if ($conn->query($sql_insert_servico) === TRUE) {
                             $servico_id = $conn->insert_id;
                         } else {
@@ -169,4 +169,3 @@ function salvarAnexos(PDO $conn, $tabela_ref, $ref_id, $arquivos)
         }
     }
 }
-?>

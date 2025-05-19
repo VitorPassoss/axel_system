@@ -167,7 +167,7 @@ $result = $stmt->get_result();
                 </button>
 
                 <!-- Cabeçalho -->
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4 text-center">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-black mb-4 text-center">
                     Nova Obra
                 </h2>
 

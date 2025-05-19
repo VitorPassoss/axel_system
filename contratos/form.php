@@ -77,7 +77,7 @@ if (isset($_GET['contrato_id'])) {
 
             <!-- Cabeçalho -->
             <!-- Cabeçalho -->
-            <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-6 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-black mb-6 text-center">
                 <?php
                 if (isset($contrato_id) && !empty($contrato_id)) {
                     // Se houver contrato, exibe "Editar Contrato"
@@ -170,6 +170,21 @@ if (isset($_GET['contrato_id'])) {
 
                         </select>
                     </div>
+
+                    <div class="flex flex-col">
+                        <label for="dt_inicio" class="text-gray-700 mb-1 text-sm font-medium">Data de Início</label>
+                        <input type="date" id="dt_inicio" name="dt_inicio"
+                            value="<?= htmlspecialchars($contrato['dt_inicio'] ?? '') ?>"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label for="dt_fim" class="text-gray-700 mb-1 text-sm font-medium">Data de Fim</label>
+                        <input type="date" id="dt_fim" name="dt_fim"
+                            value="<?= htmlspecialchars($contrato['dt_fim'] ?? '') ?>"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
+                    </div>
+
                     <input type="file" id="anexos" name="anexos[]" multiple />
 
 

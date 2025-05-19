@@ -83,7 +83,7 @@ $status_obras = $stmt->get_result();
 
             <!-- Cabeçalho -->
             <!-- Cabeçalho -->
-            <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-6 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-black mb-6 text-center">
                 <?php
                 if (isset($contrato_id) && !empty($contrato_id)) {
                     // Se houver contrato, exibe "Editar Contrato"

@@ -179,7 +179,7 @@ while ($row = $resultServicos->fetch_assoc()) {
 
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="window.location.href='./relatorio_fotografico'" class="bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center gap-2">
+                    <button onclick="window.location.href='./relatorio_fotografico?sc_id=<?php echo htmlspecialchars($os['id']); ?>'"" class=" bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center gap-2">
                         <i class="fas fa-camera-retro"></i> <!-- Ícone de câmera -->
                         Levantamento
                     </button>
@@ -199,7 +199,12 @@ while ($row = $resultServicos->fetch_assoc()) {
                     <?php if (isset($os['id'])): ?>
                         <input id="osId" type="hidden" name="id" value="<?= htmlspecialchars($os['id']) ?>">
                     <?php endif; ?>
-
+                    <div class="flex flex-col">
+                        <label for="descricao" class="text-gray-700 mb-1 text-sm font-medium">Descrição da Os</label>
+                        <input type="text" id="descricao" name="descricao"
+                            value="<?= htmlspecialchars($os['descricao'] ?? '') ?>"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
+                    </div>
 
                     <div class="flex flex-col">
                         <label for="responsavel" class="text-gray-700 mb-1 text-sm font-medium">Responsavel</label>
@@ -231,12 +236,6 @@ while ($row = $resultServicos->fetch_assoc()) {
 
 
 
-                    <div class="flex flex-col">
-                        <label for="Equipe" class="text-gray-700 mb-1 text-sm font-medium">Equipe</label>
-                        <input type="text" step="0.01" id="equipe" name="equipe" required
-                            value="<?= htmlspecialchars($os['equipe'] ?? '') ?>"
-                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
-                    </div>
                     <div class="flex flex-col">
                         <label for="data_inicio" class="text-gray-700 mb-1 text-sm font-medium">Data de Início</label>
                         <input type="date" id="data_inicio" name="data_inicio"
@@ -343,7 +342,7 @@ while ($row = $resultServicos->fetch_assoc()) {
 
 
             <div class="w-full bg-white p-6 rounded-lg shadow-lg w-full mt-10">
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-6 text-start">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-black mb-6 text-start">
                     Serviços Vinculados
                 </h2>
                 <!-- Botão para abrir o modal, alterando o tipo para "button" para evitar o envio do formulário -->
@@ -465,7 +464,7 @@ while ($row = $resultServicos->fetch_assoc()) {
 
                         <!-- Executor -->
                         <div class="mb-4">
-                            <label for="executor" class="block text-sm font-medium text-gray-700">Executor</label>
+                            <label for="executor" class="block text-sm font-medium text-gray-700">Equipe</label>
                             <input type="text" id="executor" name="executor" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
                         </div>
 

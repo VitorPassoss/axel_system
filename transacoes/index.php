@@ -64,7 +64,7 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
       &times;
     </button>
 
-    <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-6 text-center">Nova Transação</h2>
+    <h2 class="text-3xl font-bold text-gray-800 dark:text-black mb-6 text-center">Nova Transação</h2>
 
     <!-- Formulário -->
     <form id="form-transacao" class="space-y-6">
