@@ -181,7 +181,7 @@ while ($row = $resultServicos->fetch_assoc()) {
                 <div class="flex gap-3">
                     <button onclick="window.location.href='./relatorio_fotografico'" class="bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center gap-2">
                         <i class="fas fa-camera-retro"></i> <!-- Ícone de câmera -->
-                        Relatório Fotográfico
+                        Levantamento
                     </button>
                     <button onclick="window.location.href='./sc_compra?sc_id=<?php echo htmlspecialchars($os['id']); ?>'" class="bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center gap-2">
                         <i class="fas fa-cart-plus"></i> <!-- Ícone de carrinho de compras -->

@@ -16,7 +16,12 @@
     left: 0;
     z-index: 30;
     width: 16.5%;
+    min-width: 200px;
+    max-width: 280px;
+    font-size: 0.8rem;
+    /* base responsivo */
   }
+
 
   #sideMenu li {
     margin-top: 5px;
@@ -182,27 +187,39 @@
             `;
           }
 
-          if (['projetos', 'gestão', 'tecnologia'].includes(setor_nome.toLowerCase())) {
+
+
+          if (['operacional'].includes(setor_nome.toLowerCase())) {
+            menuHTML += `
+              ${getMenuItem('../contratos', 'fas fa-diagram-project', 'Contratos')}
+            `;
+          }
+
+          if (['projetos', 'gestão', 'tecnologia', 'operacional'].includes(setor_nome.toLowerCase())) {
             menuHTML += `
               ${getMenuItem('../projetos', 'fa-solid fa-ruler-combined', 'Projetos')}
               ${getMenuItem('../Obras', 'fa-solid fa-trowel-bricks', 'Obras')}
               ${getMenuItem('../os', 'fas fa-clipboard-list', 'Ordens de Serviço')}
-              ${getMenuItem('../recursos', 'fas fa-shopping-cart', 'Solicitações')}
             `;
           }
 
 
-              if (['financeiro','gestão', 'tecnologia'].includes(setor_nome.toLowerCase())) {
+
+
+          if (['gestão', 'tecnologia'].includes(setor_nome.toLowerCase())) {
             menuHTML += `
+          ${getMenuItem('../recursos', 'fas fa-shopping-cart', 'Fluxo de Compras')}
+          ${getMenuItem('../cotacoes', 'fas fa-shopping-cart', 'Cotações')}
           ${getMenuWithDropdown('fas fa-money-check-alt', 'Centro de Custo', [
             { href: '../transacoes', label: 'Entradas', icon: 'fas fa-arrow-circle-down' },
-            { href: '../transacoes/saidas.php', label: 'Saídas', icon: 'fas fa-arrow-circle-up' }
+            { href: '../transacoes/saidas.php', label: 'Saídas', icon: 'fas fa-arrow-circle-up' },
           ])}
+
         `;
           }
 
-        
-    
+
+
 
 
 

@@ -12,8 +12,6 @@
 
 
 <style>
-
-  
     @media (prefers-color-scheme: dark) {
 
         input,
@@ -22,6 +20,15 @@
             background-color: #fff !important;
             color: #000 !important;
         }
+    }
+
+    input,
+    textarea,
+    select {
+        background-color: #fff !important;
+        color: #000 !important;
+        -webkit-text-fill-color: #000 !important;
+        caret-color: #000;
     }
 </style>
 

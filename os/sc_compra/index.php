@@ -1,4 +1,5 @@
 <?php
+include '../../layout/imports.php';
 
 session_start();
 
