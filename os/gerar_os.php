@@ -14,9 +14,9 @@ $empresa_id = $_SESSION['empresa_id'];
 $os_id = intval($_GET['id']);
 
 $host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
+$dbname = 'u470175651_axel';
+$username = 'u470175651_axel';
+$password = '99746510Gg@';
 
 // Conexão com banco
 $conn = new mysqli($host, $username, $password, $dbname);

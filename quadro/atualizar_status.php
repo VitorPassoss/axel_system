@@ -1,9 +1,9 @@
 <?php
 // Conexão com o banco de dados
 $host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
+$dbname = 'u470175651_axel';
+$username = 'u470175651_axel';
+$password = '99746510Gg@';
 
 $conn = new mysqli($host, $username, $password, $dbname);
 if ($conn->connect_error) {

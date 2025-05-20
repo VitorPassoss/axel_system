@@ -16,7 +16,7 @@ function verificarAutenticacao()
 verificarAutenticacao();
 
 // Conexão com o banco
-$conn = new mysqli('localhost', 'root', '', 'axel_db');
+$conn = new mysqli('localhost', 'u470175651_axel', '99746510Gg@', 'u470175651_axel');
 if ($conn->connect_error) {
     die("Erro de conexão: " . $conn->connect_error);
 }
@@ -59,9 +59,9 @@ $conn->close();
 
 // Conexão com o banco de dados
 $host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
+$dbname = 'u470175651_axel';
+$username = 'u470175651_axel';
+$password = '99746510Gg@';
 
 $conn = new mysqli($host, $username, $password, $dbname);
 

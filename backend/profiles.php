@@ -7,7 +7,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Conectar ao banco de dados
-$conn = new mysqli('localhost', 'root', '', 'axel_db');
+$conn = new mysqli('localhost', 'u470175651_axel', '99746510Gg@', 'u470175651_axel');
 if ($conn->connect_error) {
     echo json_encode(['error' => 'Erro na conexão com o banco de dados']);
     exit;

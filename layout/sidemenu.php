@@ -88,8 +88,8 @@
 
   <div class="absolute bottom-0 text-sm text-gray-700 leading-4 mb-2">
 
-    <p class="text-[14px]" id="userEmail"></p>
-    <p class="text-[12px]" id="userCompany"></p>
+    <p class="text-[14px] truncate w-56" id="userEmail" title="email@email.com"></p>
+    <p class="text-[12px] " id="userCompany"></p>
 
     <button id="logoutButton" class="flex items-center py-4 mt-2  rounded transition-all   text-gray-800">
       <i class="fas fa-sign-out-alt mr-3"></i> Sair

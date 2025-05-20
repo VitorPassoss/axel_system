@@ -1,6 +1,6 @@
 <?php
 // conexão com o banco
-$conn = new mysqli('localhost', 'root', '', 'axel_db');
+$conn = new mysqli('localhost', 'u470175651_axel', '99746510Gg@', 'u470175651_axel');
 
 // verificar conexão
 if ($conn->connect_error) {

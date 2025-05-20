@@ -5,9 +5,9 @@ header('Content-Type: application/json');
 
 // Configuração da conexão com o banco de dados usando PDO
 $host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
+$dbname = 'u470175651_axel';
+$username = 'u470175651_axel';
+$password = '99746510Gg@';
 
 try {
     // Conexão com o banco usando PDO
