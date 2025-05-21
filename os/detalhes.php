@@ -167,28 +167,35 @@ while ($row = $resultServicos->fetch_assoc()) {
 
 
 
-
-            <header class="bg-white rounded-2xl shadow-lg p-6 mb-10 flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <button onclick="window.location.href='../os'" class="text-gray-600 hover:text-primary transition">
+            <header class="bg-white rounded-2xl shadow-lg p-6 mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <!-- Título e botão voltar -->
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <button onclick="window.location.href='../os'" class="text-gray-600 hover:text-primary transition self-start sm:self-auto">
                         <i class="fas fa-arrow-left text-xl"></i>
                     </button>
-                    <h1 class="text-2xl font-semibold text-gray-800">Detalhes da O.S - N <?= htmlspecialchars($os['id']) ?></h1>
-
+                    <h1 class="text-xl sm:text-2xl font-semibold text-gray-800">
+                        Detalhes da O.S - N <?= htmlspecialchars($os['id']) ?>
+                    </h1>
                 </div>
-                <div class="flex gap-3">
-                    <button onclick="window.location.href='./relatorio_fotografico?sc_id=<?php echo htmlspecialchars($os['id']); ?>'"" class=" bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center gap-2">
-                        <i class="fas fa-camera-retro"></i> <!-- Ícone de câmera -->
-                        Levantamento
+
+                <!-- Botões de ações -->
+                <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    <button
+                        onclick="window.location.href='./relatorio_fotografico?sc_id=<?php echo htmlspecialchars($os['id']); ?>'"
+                        class="bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center justify-center gap-2">
+                        <i class="fas fa-camera-retro"></i>
+                        Diarío de Obras
                     </button>
-                    <button onclick="window.location.href='./sc_compra?sc_id=<?php echo htmlspecialchars($os['id']); ?>'" class="bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center gap-2">
-                        <i class="fas fa-cart-plus"></i> <!-- Ícone de carrinho de compras -->
+
+                    <button
+                        onclick="window.location.href='./sc_compra?sc_id=<?php echo htmlspecialchars($os['id']); ?>'"
+                        class="bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center justify-center gap-2">
+                        <i class="fas fa-cart-plus"></i>
                         Solicitar Compra
                     </button>
-
                 </div>
-
             </header>
+
 
 
             <!-- Formulário -->
