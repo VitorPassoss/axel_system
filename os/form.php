@@ -3,12 +3,9 @@ include '../backend/auth.php';
 include '../layout/imports.php';
 
 // Conexão com o banco de dados
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../backend/dbconn.php';
 
 if ($conn->connect_error) {
     die("Conexão falhou: " . $conn->connect_error);

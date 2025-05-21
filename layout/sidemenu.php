@@ -1,70 +1,57 @@
 <style>
-  #sideMenu i {
-    color: #171717;
-    transition: color 0.3s;
-  }
-
-  #sideMenu a:hover i,
-  #sideMenu .active i {
-    color: #2B3A4B;
-  }
-
+  /* MENU LATERAL */
   #sideMenu {
     height: 100vh;
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 30;
     width: 16.5%;
-    min-width: 200px;
-    max-width: 280px;
     font-size: 0.8rem;
-    /* base responsivo */
+    max-width: 100%;
+    z-index: 30;
   }
 
-
-  #sideMenu li {
-    margin-top: 5px;
+  /* BOTÃO DE MENU (HAMBURGUER) */
+  #toggleButton {
+    position: fixed;
+    top: 0px;
+    left: 16.5%;
+    z-index: 40;
+    background-color: #fff;
+    color: gray;
+    border: none;
+    padding: 6px;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    transition: left 0.1s ease;
   }
 
-  @media (min-width: 768px) {
-    .side-menu {
-      transform: translateX(0);
-      left: 0;
-      position: fixed;
-      height: 100vh;
-      backdrop-filter: none;
+  /* CONTEÚDO DA PÁGINA */
+  body {
+    margin-left: 15.5%;
+  }
+
+  /* MOBILE - MENU ESCONDIDO */
+  @media (max-width: 768px) {
+    #sideMenu {
+      display: none;
+      width: 80%;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+      background-color: white;
+      z-index: 1000;
     }
 
-
-  }
-
-  #sideMenu a:hover i {
-    color: #2B3A4B !important;
-  }
-
-
-
-
-  body {
-    margin-left: 16%;
-  }
-
-
-  @media (max-width: 768px) {
-    .side-menu {
-      transform: translateX(0);
-      left: 0;
-      position: fixed;
-      height: 100vh;
-      backdrop-filter: none;
-      display: none;
+    #toggleButton {
+      left: 10px;
     }
 
     body {
-      margin-left: 0%;
+      margin-left: 0;
     }
 
+    body.menu-open #sideMenu {
+      display: block;
+    }
   }
 </style>
 
@@ -73,6 +60,11 @@
     display: block;
   }
 </style>
+
+
+<button id="toggleButton" class="shadow" onclick="toggleMenu()">
+  <i class="fas fa-bars "></i>
+</button>
 
 
 <div id="sideMenu" class="  side-menu fixed top-0 left-[-100%] shadow-xl w-64 min-h-screen bg-[#FFFFFF] backdrop-blur-lg p-4 space-y-2 transition-all duration-300 ease-in-out transform rounded-lg z-30">
@@ -176,8 +168,14 @@
 
 
           let menuHTML = `<ul>
-            ${getMenuItem('../home', 'fas fa-home', 'Início')}
           `;
+
+          if (setor_nome.toLowerCase() !== 'contratante') {
+            menuHTML += `
+            ${getMenuItem('../home', 'fas fa-home', 'Início')}
+
+            `;
+          }
 
           if (['gestão', 'tecnologia'].includes(setor_nome.toLowerCase())) {
             menuHTML += `
@@ -187,7 +185,11 @@
             `;
           }
 
-
+          if (setor_nome.toLowerCase() === 'contratante') {
+            menuHTML += `
+              ${getMenuItem('../os', 'fas fa-clipboard-list', 'Ordens de Serviço')}
+            `;
+          }
 
           if (['operacional'].includes(setor_nome.toLowerCase())) {
             menuHTML += `
@@ -249,9 +251,19 @@
         menuContent.innerHTML += setorSelectHTML;
         menuContent.innerHTML += `<div id="menuContainer"></div>`;
 
-        const setorSalvo = localStorage.getItem('setor_override');
-        const setorParaRenderizar = setorSalvo || usuario.setor_nome;
+        let setorParaRenderizar;
+
+        if (['gestão', 'tecnologia'].includes(usuario.setor_nome.toLowerCase())) {
+          const setorSalvo = localStorage.getItem('setor_override');
+          setorParaRenderizar = setorSalvo || usuario.setor_nome;
+        } else {
+          setorParaRenderizar = usuario.setor_nome;
+          localStorage.removeItem('setor_override'); // limpar override se não permitido
+        }
+
         renderMenu(setorParaRenderizar);
+
+
 
         const setorDropdown = document.getElementById('setor');
         if (setorDropdown.tagName === 'SELECT') {
@@ -267,4 +279,106 @@
       }
     })
     .catch(error => console.error('Erro:', error));
+</script>
+
+<script>
+  function isMobileView() {
+    return window.innerWidth <= 768;
+  }
+
+  function applyMenuStyles({
+    display,
+    width,
+    bodyMarginLeft,
+    toggleButtonLeft
+  }) {
+    const sideMenu = document.getElementById('sideMenu');
+    const toggleButton = document.getElementById('toggleButton');
+    const body = document.body;
+
+    sideMenu.style.display = display;
+    sideMenu.style.width = width;
+    body.style.marginLeft = bodyMarginLeft;
+    toggleButton.style.left = toggleButtonLeft;
+  }
+
+  function toggleMenu() {
+    const sideMenu = document.getElementById('sideMenu');
+    const isHidden = sideMenu.style.display === 'none';
+    const mobile = isMobileView();
+
+    if (isHidden) {
+      if (mobile) {
+        applyMenuStyles({
+          display: 'block',
+          width: '80%',
+          bodyMarginLeft: '0',
+          toggleButtonLeft: '80%'
+        });
+      } else {
+        applyMenuStyles({
+          display: 'block',
+          width: '16.5%',
+          bodyMarginLeft: '15.5%',
+          toggleButtonLeft: '16.5%'
+        });
+      }
+      localStorage.setItem('menuOpen', 'true');
+    } else {
+      applyMenuStyles({
+        display: 'none',
+        width: '',
+        bodyMarginLeft: '0',
+        toggleButtonLeft: '0'
+      });
+      localStorage.setItem('menuOpen', 'false');
+    }
+  }
+
+  window.onload = function() {
+    const savedState = localStorage.getItem('menuOpen');
+    const mobile = isMobileView();
+
+    if (savedState === null) {
+      // Default state
+      if (mobile) {
+        applyMenuStyles({
+          display: 'none',
+          width: '',
+          bodyMarginLeft: '0',
+          toggleButtonLeft: '0'
+        });
+      } else {
+        applyMenuStyles({
+          display: 'block',
+          width: '16.5%',
+          bodyMarginLeft: '15.5%',
+          toggleButtonLeft: '16.5%'
+        });
+      }
+    } else if (savedState === 'true') {
+      if (mobile) {
+        applyMenuStyles({
+          display: 'block',
+          width: '80%',
+          bodyMarginLeft: '0',
+          toggleButtonLeft: '80%'
+        });
+      } else {
+        applyMenuStyles({
+          display: 'block',
+          width: '16.5%',
+          bodyMarginLeft: '15.5%',
+          toggleButtonLeft: '16.5%'
+        });
+      }
+    } else {
+      applyMenuStyles({
+        display: 'none',
+        width: '',
+        bodyMarginLeft: '0',
+        toggleButtonLeft: '0'
+      });
+    }
+  };
 </script>

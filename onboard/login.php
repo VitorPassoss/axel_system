@@ -58,9 +58,8 @@
       Entrar
     </button>
 
-
     <button
-      onclick="primeiroAcesso()"
+      id="btnPrimeiroAcesso"
       class="w-full bg-[white] mt-2 border border-[2px] border-black-400 hover:bg-black hover:text-white py-3 rounded-lg font-semibold transition text-black">
       Primeiro Acesso
     </button>
@@ -72,12 +71,14 @@
   </form>
 
   <script>
+    const primeiroAcesso = (event) => {
+      event.preventDefault();
+      window.location.href = './cadastro.php';
+    };
 
+    document.getElementById('btnPrimeiroAcesso').addEventListener('click', primeiroAcesso);
 
-    const primeiroAcesso = () => {
-      window.location.href = './cadastro.php'
-    }
-
+    
     const form = document.getElementById('loginForm');
     const senhaInput = document.getElementById('senha');
     const formError = document.getElementById('formError');

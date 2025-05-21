@@ -2,11 +2,8 @@
 header('Content-Type: application/json');
 include '../backend/auth.php';
 
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../backend/dbconn.php';
 
 if ($conn->connect_error) {
     http_response_code(500);

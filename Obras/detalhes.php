@@ -3,12 +3,9 @@ include '../backend/auth.php';
 include '../layout/imports.php';
 
 // Conexão com o banco de dados
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../backend/dbconn.php';
 
 if ($conn->connect_error) {
     die("Conexão falhou: " . $conn->connect_error);
@@ -25,6 +22,17 @@ if (isset($_GET['obra_id'])) {
     $result = $stmt->get_result();
     $obra = $result->fetch_assoc();
 }
+
+
+
+$ordens_servico = [];
+if ($obra) {
+    $stmt = $conn->prepare("SELECT * FROM ordem_de_servico WHERE obra_id = ? ORDER BY criado_em DESC");
+    $stmt->bind_param("i", $obra['id']);
+    $stmt->execute();
+    $ordens_servico = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -72,8 +80,77 @@ if (isset($_GET['obra_id'])) {
                 Detalhes da Obra
             </h2>
 
+            <div class="bg-white shadow-md rounded-2xl p-6 mb-10">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Resumo da Obra</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-gray-700">
+
+                    <div><span class="font-semibold">Nome da Obra:</span> <?= htmlspecialchars($obra['nome'] ?? '') ?></div>
+
+                    <div><span class="font-semibold">Data de Início:</span>
+                        <?= !empty($obra['data_inicio']) ? date('d/m/Y', strtotime($obra['data_inicio'])) : '' ?>
+                    </div>
+
+                    <div><span class="font-semibold">Previsão de Término:</span>
+                        <?= !empty($obra['data_previsao_fim']) ? date('d/m/Y', strtotime($obra['data_previsao_fim'])) : '' ?>
+                    </div>
+
+                    <div><span class="font-semibold">Responsável Técnico:</span> <?= htmlspecialchars($obra['responsavel_tecnico'] ?? '') ?></div>
+
+                    <div><span class="font-semibold">Cliente:</span> <?= htmlspecialchars($obra['cliente'] ?? '') ?></div>
+
+                    <div><span class="font-semibold">Tipo de Obra:</span> <?= htmlspecialchars($obra['tipo_obra'] ?? '') ?></div>
+
+                    <div><span class="font-semibold">Cidade:</span> <?= htmlspecialchars($obra['cidade'] ?? '') ?></div>
+
+                    <div><span class="font-semibold">Estado:</span> <?= htmlspecialchars($obra['estado'] ?? '') ?></div>
+
+                    <div><span class="font-semibold">CEP:</span> <?= htmlspecialchars($obra['cep'] ?? '') ?></div>
+
+                    <div><span class="font-semibold">Status:</span>
+                        <?php
+                        if (!empty($obra['status_id'])) {
+                            $status_sql = "SELECT nome FROM status_obras WHERE id = " . intval($obra['status_id']);
+                            $status_result = $conn->query($status_sql);
+                            if ($status_result && $status_row = $status_result->fetch_assoc()) {
+                                echo htmlspecialchars($status_row['nome']);
+                            }
+                        }
+                        ?>
+                    </div>
+
+                    <div><span class="font-semibold">Contrato (Número):</span>
+                        <?php
+                        if (!empty($obra['contrato_id'])) {
+                            $contrato_sql = "SELECT numero_contrato FROM contratos WHERE id = " . intval($obra['contrato_id']);
+                            $contrato_result = $conn->query($contrato_sql);
+                            if ($contrato_result && $contrato_row = $contrato_result->fetch_assoc()) {
+                                echo htmlspecialchars($contrato_row['numero_contrato']);
+                            }
+                        }
+                        ?>
+                    </div>
+
+                    <div><span class="font-semibold">Projeto:</span>
+                        <?php
+                        if (!empty($obra['projeto_id'])) {
+                            $projeto_sql = "SELECT nome FROM projetos WHERE id = " . intval($obra['projeto_id']);
+                            $projeto_result = $conn->query($projeto_sql);
+                            if ($projeto_result && $projeto_row = $projeto_result->fetch_assoc()) {
+                                echo htmlspecialchars($projeto_row['nome']);
+                            }
+                        }
+                        ?>
+                    </div>
+
+                </div>
+            </div>
+
+
+
             <!-- Formulário -->
             <form method="POST" class="space-y-4">
+
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     <!-- Nome da Obra -->
@@ -201,6 +278,92 @@ if (isset($_GET['obra_id'])) {
                     </button>
                 </div>
             </form>
+
+
+            <?php if (count($ordens_servico) > 0): ?>
+                <div class="bg-white shadow-md rounded-2xl p-6 mt-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Ordens de Serviço da Obra <?php echo htmlspecialchars($obra['nome']); ?></h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm text-left text-gray-700">
+                            <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">ID.OS</th>
+
+                                    <th class="p-3">Descrição Os</th>
+
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3">Data Início</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($ordens_servico as $ordem): ?>
+                                    <tr class="bg-white border-b hover:bg-gray-50">
+                                        <td class="p-3"><?php echo htmlspecialchars($ordem['id']); ?></td>
+
+                                        <td class="p-3"><?php echo htmlspecialchars($ordem['descricao']); ?></td>
+                                        <td class="p-3">
+                                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                                                <?php echo htmlspecialchars($ordem['status']); ?>
+                                            </span>
+                                        </td>
+                                        <td class="p-3"><?php echo date('d/m/Y', strtotime($ordem['data_inicio'])); ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="p-3 bg-gray-50">
+                                            <?php
+                                            $stmt_servicos = $conn->prepare("
+                                    SELECT so.*, s.nome AS nome_servico
+                                    FROM servicos_os so
+                                    JOIN servicos s ON so.servico_id = s.id
+                                    WHERE so.os_id = ?
+                                    ORDER BY so.dt_inicio DESC
+                                ");
+                                            $stmt_servicos->bind_param("i", $ordem['id']);
+                                            $stmt_servicos->execute();
+                                            $servicos_os = $stmt_servicos->get_result()->fetch_all(MYSQLI_ASSOC);
+                                            ?>
+                                            <strong>Serviços relacionados:</strong>
+                                            <?php if (count($servicos_os) > 0): ?>
+                                                <table class="min-w-full text-sm text-left text-gray-600 mt-2 border border-gray-300 rounded">
+                                                    <thead class="bg-gray-200">
+                                                        <tr>
+                                                            <th class="p-2 border-b">Serviço</th>
+                                                            <th class="p-2 border-b">Quantidade</th>
+                                                            <th class="p-2 border-b">Unidade</th>
+                                                            <th class="p-2 border-b">Executor</th>
+                                                            <th class="p-2 border-b">Data Início</th>
+                                                            <th class="p-2 border-b">Data Final</th>
+                                                            <th class="p-2 border-b">Tipo</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php foreach ($servicos_os as $servico): ?>
+                                                            <tr class="border-b hover:bg-gray-100">
+                                                                <td class="p-2 border-r"><?php echo htmlspecialchars($servico['nome_servico']); ?></td>
+                                                                <td class="p-2 border-r"><?php echo htmlspecialchars($servico['quantidade']); ?></td>
+                                                                <td class="p-2 border-r"><?php echo htmlspecialchars($servico['und_do_servico']); ?></td>
+                                                                <td class="p-2 border-r"><?php echo htmlspecialchars($servico['executor']); ?></td>
+                                                                <td class="p-2 border-r"><?php echo date('d/m/Y', strtotime($servico['dt_inicio'])); ?></td>
+                                                                <td class="p-2 border-r"><?php echo date('d/m/Y', strtotime($servico['dt_final'])); ?></td>
+                                                                <td class="p-2 border-r"><?php echo htmlspecialchars($servico['tipo_servico']); ?></td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            <?php else: ?>
+                                                <p class="text-sm text-gray-500 mt-2">Nenhum serviço relacionado.</p>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <?php else: ?>
+                <p class="text-gray-600 mt-4">Nenhuma ordem de serviço encontrada para esta obra.</p>
+            <?php endif; ?>
+
         </div>
     </div>
 

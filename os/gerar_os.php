@@ -13,13 +13,10 @@ if (!isset($_GET['id'])) {
 $empresa_id = $_SESSION['empresa_id'];
 $os_id = intval($_GET['id']);
 
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
+
 
 // Conexão com banco
-$conn = new mysqli($host, $username, $password, $dbname);
+include '../backend/dbconn.php';
 if ($conn->connect_error) {
     die("Erro de conexão: " . $conn->connect_error);
 }

@@ -15,11 +15,8 @@ if (!is_dir($pasta_base)) {
 
 // Conexão (caso o script seja usado isolado também)
 if (!isset($conn)) {
-    $host = 'localhost';
-    $dbname = 'axel_db';
-    $username = 'root';
-    $password = '';
-    $conn = new mysqli($host, $username, $password, $dbname);
+    include './dbconn.php';
+
     if ($conn->connect_error) {
         die("Conexão falhou: " . $conn->connect_error);
     }

@@ -1,19 +1,17 @@
 <?php
 include '../backend/auth.php';
 include '../layout/imports.php';
-
-// Conexão com o banco de dados
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
-$conn = new mysqli($host, $username, $password, $dbname);
+include '../backend/dbconn.php';
 
 if ($conn->connect_error) {
   die("Conexão falhou: " . $conn->connect_error);
 }
 
 $empresa_id_sessao = $_SESSION['empresa_id'];
+$user_id_sessao = $_SESSION['user_id'];
+
+$usuario = $GLOBALS['usuario'];
+$ocultar_filtros = strtolower($usuario['setor_nome']) === 'contratante';
 
 // Filtros recebidos via GET
 $filtro_empresa = $_GET['empresa_id'] ?? '';
@@ -21,30 +19,28 @@ $filtro_obra = $_GET['obra_id'] ?? '';
 $filtro_contrato = $_GET['contrato_id'] ?? '';
 $filtro_periodo = $_GET['periodo'] ?? '';
 
-
-// Consulta de empresas para o filtro
+// Consulta de empresas e obras (filtros laterais)
 $empresas = $conn->query("SELECT id, nome FROM empresas");
 
-// Consulta de obras da empresa logada (ou da empresa filtrada, se houver)
 $empresa_para_obras = !empty($filtro_empresa) ? intval($filtro_empresa) : $empresa_id_sessao;
 $obras = $conn->query("SELECT id, nome FROM obras WHERE empresa_id = $empresa_para_obras");
 
-// Montagem do WHERE dinâmico
+// WHERE base
 $where = "WHERE os.empresa_id = ?";
 $params = [$empresa_id_sessao];
 $types = "i";
 
+// Substitui empresa_id se vier via GET
 if (!empty($filtro_empresa)) {
-  $where = "WHERE os.empresa_id = ?";
-  $params = [intval($filtro_empresa)];
+  $params[0] = intval($filtro_empresa);
 }
 
+// Aplica demais filtros
 if (!empty($filtro_obra)) {
   $where .= " AND os.obra_id = ?";
   $params[] = intval($filtro_obra);
   $types .= "i";
 }
-
 
 if (!empty($filtro_contrato)) {
   $where .= " AND os.contrato_id = ?";
@@ -60,9 +56,23 @@ if (!empty($filtro_periodo)) {
   }
 }
 
+// 🔒 Filtra pelo contrato_id do usuário se for 'contratante'
+if (strtolower($usuario['setor_nome']) === 'contratante') {
+  $stmt_user = $conn->prepare("SELECT contrato_id FROM users WHERE id = ?");
+  $stmt_user->bind_param("i", $user_id_sessao);
+  $stmt_user->execute();
+  $res_user = $stmt_user->get_result();
+  $user_data = $res_user->fetch_assoc();
 
-// Consulta final com joins
-// Consulta final com joins
+  if ($user_data && !empty($user_data['contrato_id'])) {
+    $where .= " AND os.contrato_id = ?";
+    $params[] = intval($user_data['contrato_id']);
+    $types .= "i";
+  }
+  $stmt_user->close();
+}
+
+// Query final
 $sql = "
 SELECT 
     os.*, 
@@ -82,6 +92,7 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
+
 ?>
 
 <!DOCTYPE html>
@@ -136,83 +147,86 @@ $result = $stmt->get_result();
 
     <!-- Tabela -->
     <div class="overflow-x-auto  rounded-lg shadow-lg bg-white">
-      <form method="GET" class="mb-1 flex gap-2 items-center">
-        <!-- Filtro de Empresa -->
-        <div class="flex items-center gap-2 px-4 py-4">
-          <div>
-            <i class="fas fa-building text-gray-500"></i> <!-- Ícone de empresa -->
-            <label for="empresa_id" class="text-sm font-medium text-gray-700">Empresa</label>
 
-            <select name="empresa_id" id="empresa_id" class="mt-1 block w-full p-2 mt-2 sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-              <option value="">Todas</option>
-              <?php while ($empresa = $empresas->fetch_assoc()) { ?>
-                <option value="<?= $empresa['id'] ?>" <?= $filtro_empresa == $empresa['id'] ? 'selected' : '' ?>>
-                  <?= htmlspecialchars($empresa['nome']) ?>
-                </option>
-              <?php } ?>
-            </select>
-          </div>
-        </div>
-
-        <!-- Filtro de Obra -->
-        <div class="flex items-center gap-2">
-          <div>
-            <i class="fas fa-hammer text-gray-500"></i> <!-- Ícone de obra -->
-            <label for="obra_id" class="text-sm font-medium text-gray-700">Obra</label>
-            <select name="obra_id" id="obra_id" class="mt-1 p-2 block mt-2 w-full sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-              <option value="">Todas</option>
-              <?php while ($obra = $obras->fetch_assoc()) { ?>
-                <option value="<?= $obra['id'] ?>" <?= $filtro_obra == $obra['id'] ? 'selected' : '' ?>>
-                  <?= htmlspecialchars($obra['nome']) ?>
-                </option>
-              <?php } ?>
-            </select>
-          </div>
-
-          <!-- Filtro de Contrato -->
+      <?php if (!$ocultar_filtros): ?>
+        <form method="GET" class="mb-1 flex gap-2 items-center">
+          <!-- Filtro de Empresa -->
           <div class="flex items-center gap-2 px-4 py-4">
             <div>
-              <i class="fas fa-file-contract text-gray-500"></i>
-              <label for="contrato_id" class="text-sm font-medium text-gray-700">Contrato</label>
-              <select name="contrato_id" id="contrato_id" class="mt-1 block w-full p-2 mt-2 sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                <option value="">Todos</option>
-                <?php
-                $contratos = $conn->query("SELECT id, numero_contrato FROM contratos WHERE empresa_id = $empresa_id_sessao");
-                while ($contrato = $contratos->fetch_assoc()) {
-                ?>
-                  <option value="<?= $contrato['id'] ?>" <?= ($_GET['contrato_id'] ?? '') == $contrato['id'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($contrato['numero_contrato']) ?>
+              <i class="fas fa-building text-gray-500"></i> <!-- Ícone de empresa -->
+              <label for="empresa_id" class="text-sm font-medium text-gray-700">Empresa</label>
+
+              <select name="empresa_id" id="empresa_id" class="mt-1 block w-full p-2 mt-2 sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Todas</option>
+                <?php while ($empresa = $empresas->fetch_assoc()) { ?>
+                  <option value="<?= $empresa['id'] ?>" <?= $filtro_empresa == $empresa['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($empresa['nome']) ?>
                   </option>
                 <?php } ?>
               </select>
             </div>
           </div>
 
-          <!-- Filtro de Data -->
-          <div class="flex items-center gap-2 px-4 py-4">
+          <!-- Filtro de Obra -->
+          <div class="flex items-center gap-2">
             <div>
-              <i class="fas fa-calendar text-gray-500"></i>
-              <label for="periodo" class="text-sm font-medium text-gray-700">Período</label>
-              <select name="periodo" id="periodo" class="mt-1 block w-full p-2 mt-2 sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                <option value="">Todos</option>
-                <option value="hoje" <?= ($_GET['periodo'] ?? '') == 'hoje' ? 'selected' : '' ?>>Hoje</option>
-                <option value="mes" <?= ($_GET['periodo'] ?? '') == 'mes' ? 'selected' : '' ?>>Este Mês</option>
+              <i class="fas fa-hammer text-gray-500"></i> <!-- Ícone de obra -->
+              <label for="obra_id" class="text-sm font-medium text-gray-700">Obra</label>
+              <select name="obra_id" id="obra_id" class="mt-1 p-2 block mt-2 w-full sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Todas</option>
+                <?php while ($obra = $obras->fetch_assoc()) { ?>
+                  <option value="<?= $obra['id'] ?>" <?= $filtro_obra == $obra['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($obra['nome']) ?>
+                  </option>
+                <?php } ?>
               </select>
+            </div>
+
+            <!-- Filtro de Contrato -->
+            <div class="flex items-center gap-2 px-4 py-4">
+              <div>
+                <i class="fas fa-file-contract text-gray-500"></i>
+                <label for="contrato_id" class="text-sm font-medium text-gray-700">Contrato</label>
+                <select name="contrato_id" id="contrato_id" class="mt-1 block w-full p-2 mt-2 sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Todos</option>
+                  <?php
+                  $contratos = $conn->query("SELECT id, numero_contrato FROM contratos WHERE empresa_id = $empresa_id_sessao");
+                  while ($contrato = $contratos->fetch_assoc()) {
+                  ?>
+                    <option value="<?= $contrato['id'] ?>" <?= ($_GET['contrato_id'] ?? '') == $contrato['id'] ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($contrato['numero_contrato']) ?>
+                    </option>
+                  <?php } ?>
+                </select>
+              </div>
+            </div>
+
+            <!-- Filtro de Data -->
+            <div class="flex items-center gap-2 px-4 py-4">
+              <div>
+                <i class="fas fa-calendar text-gray-500"></i>
+                <label for="periodo" class="text-sm font-medium text-gray-700">Período</label>
+                <select name="periodo" id="periodo" class="mt-1 block w-full p-2 mt-2 sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Todos</option>
+                  <option value="hoje" <?= ($_GET['periodo'] ?? '') == 'hoje' ? 'selected' : '' ?>>Hoje</option>
+                  <option value="mes" <?= ($_GET['periodo'] ?? '') == 'mes' ? 'selected' : '' ?>>Este Mês</option>
+                </select>
+              </div>
+            </div>
+
+
+            <div class="flex items-center py-4 ">
+              <button type="submit" class="flex items-center bg-black mt-7 ml-4 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50">
+                <i class="fas fa-filter mr-2"></i> <!-- Ícone de filtro -->
+                Filtrar
+              </button>
             </div>
           </div>
 
+          <!-- Botão de Filtro -->
 
-          <div class="flex items-center py-4 ">
-            <button type="submit" class="flex items-center bg-black mt-7 ml-4 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50">
-              <i class="fas fa-filter mr-2"></i> <!-- Ícone de filtro -->
-              Filtrar
-            </button>
-          </div>
-        </div>
-
-        <!-- Botão de Filtro -->
-
-      </form>
+        </form>
+      <?php endif; ?>
 
       <table class="min-w-full divide-y divide-gray-200">
         <thead>
@@ -232,8 +246,11 @@ $result = $stmt->get_result();
           <?php while ($row = $result->fetch_assoc()) { ?>
             <tr class="hover:bg-gray-100">
               <td class="px-6 py-4" onclick="visualizarProjeto(<?php echo $row['id']; ?>)"><?php echo htmlspecialchars($row['id']); ?></td>
-              <td class="px-6 py-4" onclick="visualizarProjeto(<?php echo $row['id']; ?>)"><?php echo htmlspecialchars($row['descricao']); ?></td>
-
+              <td
+                class="px-6 py-4 max-w-[220px] truncate"
+                onclick="visualizarProjeto(<?= $row['id']; ?>)">
+                <?= htmlspecialchars($row['descricao']); ?>
+              </td>
               <?php
               $status = htmlspecialchars($row['status']);
               $bgColor = match ($status) {

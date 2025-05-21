@@ -1,64 +1,71 @@
 <style>
-  #sideMenu i {
-    color: #171717;
-    transition: color 0.3s;
-  }
-
-  #sideMenu a:hover i,
-  #sideMenu .active i {
-    color: #2B3A4B;
-  }
-
+  /* MENU LATERAL */
   #sideMenu {
     height: 100vh;
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 30;
     width: 16.5%;
+    font-size: 0.8rem;
+    max-width: 100%;
+    z-index: 30;
   }
 
-  #sideMenu li {
-    margin-top: 5px;
+  /* BOTÃO DE MENU (HAMBURGUER) */
+  #toggleButton {
+    position: fixed;
+    top: 0px;
+    left: 16.5%;
+    z-index: 40;
+    background-color: #fff;
+    color: gray;
+    border: none;
+    padding: 6px;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    transition: left 0.1s ease;
   }
 
-  @media (min-width: 768px) {
-    .side-menu {
-      transform: translateX(0);
-      left: 0;
-      position: fixed;
-      height: 100vh;
-      backdrop-filter: none;
-    }
-
-
-  }
-
-  #sideMenu a:hover i {
-    color: #2B3A4B !important;
-  }
-
-
+  /* CONTEÚDO DA PÁGINA */
   body {
-    margin-left: 16%;
+    margin-left: 15.5%;
   }
 
-
+  /* MOBILE - MENU ESCONDIDO */
   @media (max-width: 768px) {
-    .side-menu {
-      transform: translateX(0);
-      left: 0;
-      position: fixed;
-      height: 100vh;
-      backdrop-filter: none;
+    #sideMenu {
       display: none;
+      width: 80%;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+      background-color: white;
+      z-index: 1000;
     }
-    body {
-    margin-left: 0%;
-  }
 
+    #toggleButton {
+      left: 10px;
+    }
+
+    body {
+      margin-left: 0;
+    }
+
+    body.menu-open #sideMenu {
+      display: block;
+    }
   }
 </style>
+
+<style>
+  li.group:hover>ul {
+    display: block;
+  }
+</style>
+
+
+<button id="toggleButton" class="shadow" onclick="toggleMenu()">
+  <i class="fas fa-bars "></i>
+</button>
+
 
 <div id="sideMenu" class="  side-menu fixed top-0 left-[-100%] shadow-xl w-64 min-h-screen bg-[#FFFFFF] backdrop-blur-lg p-4 space-y-2 transition-all duration-300 ease-in-out transform rounded-lg z-30">
   <div class="flex justify-between items-center ">
@@ -95,6 +102,42 @@
 </script>
 
 
+
+<script>
+  function getMenuWithDropdown(iconClass, title, items) {
+    const submenuId = `submenu-${title.toLowerCase().replace(/\s+/g, '-')}`;
+    return `
+    <li class="relative">
+      <div onclick="toggleSubmenu('${submenuId}')" class="flex items-center py-2 px-4 rounded cursor-pointer text-[#545D69] hover:bg-[#F3F5F7] hover:text-[#2B3A4B] transition-all">
+        <i style="color:rgb(168, 168, 168) !important;" class=" mr-3 text-white ${iconClass}"></i> ${title}
+        <i  class="fas fa-chevron-down ml-auto text-xs text-[#2B3A4B] group-hover:text-[#2B3A4B]"></i>
+      </div>
+      <ul id="${submenuId}" class="ml-6 mt-1 space-y-1 hidden">
+        ${items.map(sub => `
+          <li>
+            <a href="${sub.href}" class="flex items-center px-4 py-2 rounded text-[#545D69] hover:bg-[#E9EBED] hover:text-[#2B3A4B] transition-all">
+              <i class="${sub.icon}" style="color: #A5ABB3; margin-right: 0.75rem;"></i> ${sub.label}
+            </a>
+          </li>
+        `).join('')}
+      </ul>
+    </li>
+  `;
+  }
+</script>
+
+<script>
+  function toggleSubmenu(id) {
+    const submenu = document.getElementById(id);
+    if (submenu.classList.contains('hidden')) {
+      submenu.classList.remove('hidden');
+    } else {
+      submenu.classList.add('hidden');
+    }
+  }
+</script>
+
+
 <script>
   fetch('../../backend/profiles.php')
     .then(response => response.json())
@@ -125,24 +168,63 @@
 
 
           let menuHTML = `<ul>
-            ${getMenuItem('../../home', 'fas fa-home', 'Início')}
           `;
+
+
+          if (['contratante'].includes(!setor_nome.toLowerCase())) {
+            menuHTML += `
+            ${getMenuItem('../../home', 'fas fa-home', 'Início')}
+
+            `;
+          }
 
           if (['gestão', 'tecnologia'].includes(setor_nome.toLowerCase())) {
             menuHTML += `
               ${getMenuItem('../../empresas', 'fas fa-diagram-project', 'Matriz e Filiais')}
               ${getMenuItem('../../contratos', 'fas fa-diagram-project', 'Contratos')}
+
             `;
           }
 
-          if (['projetos', 'gestão', 'tecnologia'].includes(setor_nome.toLowerCase())) {
+          if (['contratante'].includes(setor_nome.toLowerCase())) {
+            menuHTML += `
+              ${getMenuItem('../../os', 'fas fa-clipboard-list', 'Ordens de Serviço')}
+            `;
+          }
+
+          if (['operacional'].includes(setor_nome.toLowerCase())) {
+            menuHTML += `
+              ${getMenuItem('../../contratos', 'fas fa-diagram-project', 'Contratos')}
+            `;
+          }
+
+          if (['projetos', 'gestão', 'tecnologia', 'operacional'].includes(setor_nome.toLowerCase())) {
             menuHTML += `
               ${getMenuItem('../../projetos', 'fa-solid fa-ruler-combined', 'Projetos')}
               ${getMenuItem('../../Obras', 'fa-solid fa-trowel-bricks', 'Obras')}
               ${getMenuItem('../../os', 'fas fa-clipboard-list', 'Ordens de Serviço')}
-              ${getMenuItem('../../recursos', 'fas fa-shopping-cart', 'Sol. Compras')}
             `;
           }
+
+
+
+
+          if (['gestão', 'tecnologia'].includes(setor_nome.toLowerCase())) {
+            menuHTML += `
+          ${getMenuItem('../../recursos', 'fas fa-shopping-cart', 'Fluxo de Compras')}
+          ${getMenuItem('../../cotacoes', 'fas fa-shopping-cart', 'Cotações')}
+          ${getMenuWithDropdown('fas fa-money-check-alt', 'Centro de Custo', [
+            { href: '../../transacoes', label: 'Entradas', icon: 'fas fa-arrow-circle-down' },
+            { href: '../../transacoes/saidas.php', label: 'Saídas', icon: 'fas fa-arrow-circle-up' },
+          ])}
+
+        `;
+          }
+
+
+
+
+
 
           menuHTML += `</ul>`;
           document.getElementById('menuContainer').innerHTML = menuHTML;
@@ -188,7 +270,106 @@
       }
     })
     .catch(error => console.error('Erro:', error));
+</script>
 
+<script>
+  function isMobileView() {
+    return window.innerWidth <= 768;
+  }
 
+  function applyMenuStyles({
+    display,
+    width,
+    bodyMarginLeft,
+    toggleButtonLeft
+  }) {
+    const sideMenu = document.getElementById('sideMenu');
+    const toggleButton = document.getElementById('toggleButton');
+    const body = document.body;
 
+    sideMenu.style.display = display;
+    sideMenu.style.width = width;
+    body.style.marginLeft = bodyMarginLeft;
+    toggleButton.style.left = toggleButtonLeft;
+  }
+
+  function toggleMenu() {
+    const sideMenu = document.getElementById('sideMenu');
+    const isHidden = sideMenu.style.display === 'none';
+    const mobile = isMobileView();
+
+    if (isHidden) {
+      if (mobile) {
+        applyMenuStyles({
+          display: 'block',
+          width: '80%',
+          bodyMarginLeft: '0',
+          toggleButtonLeft: '80%'
+        });
+      } else {
+        applyMenuStyles({
+          display: 'block',
+          width: '16.5%',
+          bodyMarginLeft: '15.5%',
+          toggleButtonLeft: '16.5%'
+        });
+      }
+      localStorage.setItem('menuOpen', 'true');
+    } else {
+      applyMenuStyles({
+        display: 'none',
+        width: '',
+        bodyMarginLeft: '0',
+        toggleButtonLeft: '0'
+      });
+      localStorage.setItem('menuOpen', 'false');
+    }
+  }
+
+  window.onload = function() {
+    const savedState = localStorage.getItem('menuOpen');
+    const mobile = isMobileView();
+
+    if (savedState === null) {
+      // Default state
+      if (mobile) {
+        applyMenuStyles({
+          display: 'none',
+          width: '',
+          bodyMarginLeft: '0',
+          toggleButtonLeft: '0'
+        });
+      } else {
+        applyMenuStyles({
+          display: 'block',
+          width: '16.5%',
+          bodyMarginLeft: '15.5%',
+          toggleButtonLeft: '16.5%'
+        });
+      }
+    } else if (savedState === 'true') {
+      if (mobile) {
+        applyMenuStyles({
+          display: 'block',
+          width: '80%',
+          bodyMarginLeft: '0',
+          toggleButtonLeft: '80%'
+        });
+      } else {
+        applyMenuStyles({
+          display: 'block',
+          width: '16.5%',
+          bodyMarginLeft: '15.5%',
+          toggleButtonLeft: '16.5%'
+        });
+      }
+    } else {
+      applyMenuStyles({
+        display: 'none',
+        width: '',
+        bodyMarginLeft: '0',
+        toggleButtonLeft: '0'
+      });
+    }
+  };
 </script>

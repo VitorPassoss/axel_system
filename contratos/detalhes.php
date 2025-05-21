@@ -2,12 +2,9 @@
 include '../backend/auth.php';
 include '../layout/imports.php';
 
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../backend/dbconn.php';
 
 if ($conn->connect_error) {
     die("Conexão falhou: " . $conn->connect_error);
@@ -467,27 +464,27 @@ $status_cores = [
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
 
                     <!-- Gráfico de Ordens de Serviço -->
-                    <div class="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center">
+                    <div class="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center max-h-[400px]">
                         <h2 class="text-lg font-semibold mb-4 text-center">Ordens de Serviço por Status</h2>
                         <canvas id="graficoPizzaOS" class="w-full max-w-[300px] h-auto"></canvas>
                     </div>
 
                     <!-- Gráfico de Obras por Status -->
-                    <div class="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center">
+                    <div class="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center max-h-[400px]">
                         <h2 class="text-lg font-semibold mb-4 text-center">Obras por Status</h2>
-                        <canvas id="graficoObrasStatus" class="w-full max-w-[400px] h-[300px]"></canvas>
+                        <canvas id="graficoObrasStatus" class="w-full max-w-[500px] h-[300px]"></canvas>
                     </div>
 
                     <!-- Gráfico de Solicitação de Insumos -->
-                    <div class="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center">
+                    <div class="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center max-h-[400px]">
                         <h2 class="text-lg font-semibold mb-4 text-center">Solicitação de Insumos por Obra</h2>
-                        <canvas id="graficoSolicitacoesObras" class="w-full max-w-[400px] h-[300px]"></canvas>
+                        <canvas id="graficoSolicitacoesObras" class="w-full max-w-[300px] h-[300px]"></canvas>
                     </div>
 
                     <!-- Gráfico de Ordens de Serviço por Obra -->
-                    <div class="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center">
+                    <div class="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center max-h-[400px]">
                         <h2 class="text-lg font-semibold mb-4 text-center">Ordens de Serviço por Obra</h2>
-                        <canvas id="graficoOrdensPorObra" class="w-full h-[200px]"></canvas>
+                        <canvas id="graficoOrdensPorObra" class="w-full max-w-[500px] h-[300px]"></canvas>
                     </div>
 
                 </div>
@@ -562,7 +559,7 @@ $status_cores = [
             },
             options: {
                 indexAxis: 'y', // <-- isso deixa o gráfico deitado
-                responsive: false,
+                responsive: true,
                 plugins: {
                     legend: {
                         display: false
@@ -640,7 +637,7 @@ $status_cores = [
                 }]
             },
             options: {
-                responsive: false,
+                responsive: true,
                 plugins: {
                     legend: {
                         position: 'bottom'
@@ -666,7 +663,7 @@ $status_cores = [
                 }]
             },
             options: {
-                responsive: false,
+                responsive: true,
                 plugins: {
                     legend: {
                         display: false

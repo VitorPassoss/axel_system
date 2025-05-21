@@ -9,12 +9,9 @@ if (!isset($_SESSION['empresa_id'])) {
 $empresa_id = $_SESSION['empresa_id']; // Obtém o empresa_id da sessão
 
 // Conexão com o banco de dados
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../../backend/dbconn.php';
 
 if ($conn->connect_error) {
     die("Conexão falhou: " . $conn->connect_error);

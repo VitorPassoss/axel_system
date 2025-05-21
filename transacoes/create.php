@@ -1,12 +1,9 @@
 <?php
 session_start(); // necessário para acessar $_SESSION
 
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../backend/dbconn.php';
 if ($conn->connect_error) {
     http_response_code(500);
     echo json_encode(['error' => 'Erro na conexão com o banco.']);

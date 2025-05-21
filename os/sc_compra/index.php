@@ -16,7 +16,8 @@ function verificarAutenticacao()
 verificarAutenticacao();
 
 // Conexão com o banco
-$conn = new mysqli('localhost', 'root', '', 'axel_db');
+include '../../backend/dbconn.php';
+
 if ($conn->connect_error) {
     die("Erro de conexão: " . $conn->connect_error);
 }
@@ -52,18 +53,13 @@ $usuario = $result->fetch_assoc();
 $_SESSION['empresa_id'] = $usuario['empresa_id'];
 
 $stmt->close();
-$conn->close();
 
 
 
 
 // Conexão com o banco de dados
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+
 
 if ($conn->connect_error) {
     die("Conexão falhou: " . $conn->connect_error);
