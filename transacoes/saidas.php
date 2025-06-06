@@ -29,6 +29,8 @@ $result = $stmt->get_result();
 
 $bancos = $conn->query("SELECT id, nome FROM bancos");
 $categorias = $conn->query("SELECT id, nome FROM categorias");
+$setores = $conn->query("SELECT id, nome FROM setores");
+
 ?>
 
 
@@ -54,14 +56,14 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
 </head>
 
 <div id="modal-criar" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
-  <div class="relative bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-2xl w-11/12 md:w-2/3 lg:w-1/2 animate-fadeIn">
+  <div class="relative bg-white  p-8 rounded-2xl shadow-2xl w-11/12 md:w-2/3 lg:w-1/2 animate-fadeIn">
 
     <!-- Botão Fechar -->
     <button onclick="toggleModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-3xl">
       &times;
     </button>
 
-    <h2 class="text-3xl font-bold text-gray-800 dark:text-black mb-6 text-center">Novo Pagamento</h2>
+    <h2 class="text-3xl font-bold text-gray-800 dark:text-black mb-6 text-center">Registrar Compra</h2>
 
     <!-- Formulário -->
     <form id="form-transacao" class="space-y-6">
@@ -110,6 +112,25 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
           </select>
         </div>
 
+        <div class="flex flex-col">
+          <label class="text-sm font-medium mb-1 text-gray-700">Setor</label>
+          <select name="setor_id" id="select-setor" class="rounded-lg p-3 border border-gray-300">
+            <?php while ($setor = $setores->fetch_assoc()) : ?>
+              <option value="<?= $setor['id'] ?>"><?= htmlspecialchars($setor['nome']) ?></option>
+            <?php endwhile; ?>
+          </select>
+        </div>
+
+        <div class="flex flex-col">
+          <label class="text-sm font-medium mb-1 text-gray-700">Data de Pagamento</label>
+          <input type="date" name="dt_pagamento" class="rounded-lg p-3 border border-gray-300" />
+        </div>
+
+
+
+       <input class="flex flex-col " type="file" id="anexos" name="anexos[]" multiple />
+
+
       </div>
 
       <div class="flex justify-end pt-4">
@@ -131,9 +152,9 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
 
     <!-- Cabeçalho -->
     <div class="flex flex-row justify-between items-center shadow bg-[#FFFFFF] py-4 px-6 rounded-2xl">
-      <h1 class="text-3xl font-bold text-primary">Saidas</h1>
+      <h1 class="text-3xl font-bold text-primary">Compras</h1>
       <button onclick="toggleModal()" class="bg-primary py-2 px-8 rounded-lg font-semibold transition text-white">
-        + Nova Saida
+       + Adicionar Nova
       </button>
     </div>
 
@@ -142,20 +163,19 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
       <table class="min-w-full divide-y divide-gray-200">
         <thead>
           <tr>
-            <th class="px-6 py-3 text-left text-sm uppercase">Descrição</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Status</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Valor</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Categoria</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Data</th>
+            <th class="px-6 py-3 text-left text-sm ">Descrição</th>
+            <th class="px-6 py-3 text-left text-sm ">Status</th>
+            <th class="px-6 py-3 text-left text-sm ">Valor</th>
+            <th class="px-6 py-3 text-left text-sm ">Categoria</th>
+            <th class="px-6 py-3 text-left text-sm ">Data</th>
 
-            <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
           <?php while ($row = $result->fetch_assoc()) : ?>
             <tr class="hover:bg-gray-100">
               <td class="px-6 py-4"><?php echo htmlspecialchars($row['descricao']); ?></td>
-          
+
               <td class="px-6 py-4">
                 <?php
                 // Status (Pendente, Paga, Cancelada, A Vencer, Em Atraso)
@@ -192,18 +212,7 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
                 ?>
               </td>
 
-              <td class="px-6 py-4 text-center">
-                <button onclick="visualizarTransacao(<?php echo $row['id']; ?>)" class="hover:underline ml-2">
-                  <i class="fas fa-eye mr-3 text-gray-500"></i>
-                </button>
-
-                <form id="delete-<?php echo $row['id']; ?>" class="inline" onsubmit="return false;">
-                  <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
-                  <button type="button" class="text-red-500 hover:underline ml-2" onclick="deleteTransacao(<?php echo $row['id']; ?>)">
-                    <i class="fas fa-trash mr-1"></i>
-                  </button>
-                </form>
-              </td>
+             
             </tr>
           <?php endwhile; ?>
         </tbody>

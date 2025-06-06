@@ -83,9 +83,9 @@ $result = $stmt->get_result();
         </div>
 
         <button onclick="window.location.href='../quadro/obras_quadro.php'" class="mt-4 flex items-center gap-2 bg-white py-2 px-6 rounded-lg font-semibold border border-gray-300 hover:bg-gray-100 text-gray-800 transition">
-      <i class="fas fa-th-large text-gray-600"></i>
-      Visualizar Quadro
-    </button>
+            <i class="fas fa-th-large text-gray-600"></i>
+            Visualizar Quadro
+        </button>
 
 
         <!-- Tabela -->
@@ -93,13 +93,12 @@ $result = $stmt->get_result();
             <table class="min-w-full divide-y divide-gray-200">
                 <thead>
                     <tr>
-                        <th></th> <!-- Botão dropdown -->
-                        <th class="px-6 py-3 text-left text-sm uppercase">Nome</th>
-                        <th class="px-6 py-3 text-left text-sm uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-sm uppercase">Início</th>
-                        <th class="px-6 py-3 text-left text-sm uppercase">Responsável</th>
-                        <th class="px-6 py-3 text-left text-sm uppercase">Cliente</th>
-                        <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
+                        <th class="px-6 py-3 text-left text-sm  border">Nome</th>
+                        <th class="px-6 py-3 text-left text-sm  border">Status</th>
+                        <th class="px-6 py-3 text-left text-sm  border">Início</th>
+                        <th class="px-6 py-3 text-left text-sm  border">Responsável</th>
+                        <th class="px-6 py-3 text-left text-sm  border">Cliente</th>
+                        <!-- <th class="px-6 py-3 text-center text-sm  border">Ações</th> -->
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -107,23 +106,21 @@ $result = $stmt->get_result();
                         $obra_id = $row['id'];
                     ?>
                         <tr class="hover:bg-gray-100">
-                            <td class="px-2 text-center">
-                                <button id="btn-<?php echo $obra_id; ?>" onclick="toggleDropdown(<?php echo $obra_id; ?>)">
-                                    <i class="fas fa-chevron-down text-gray-500"></i>
-                                </button>
-                            </td>
-                            <td class="px-6 py-4"><?php echo htmlspecialchars($row['nome']); ?></td>
 
-                            <td class="px-6 py-4">
+                            <td onclick="editarObra(<?php echo $obra_id; ?>)" class="px-6 py-4 border text-sm"><?php echo htmlspecialchars($row['nome']); ?></td>
+
+                            <td onclick="editarObra(<?php echo $obra_id; ?>)" class="px-6 py-4 border text-sm">
                                 <span style="background-color: <?= htmlspecialchars($row['status_cor']) ?>; color: black;"
                                     class="px-3 py-1 rounded-full text-sm font-semibold ">
                                     <?= htmlspecialchars($row['status_nome']) ?>
                                 </span>
                             </td>
-                            <td class="px-6 py-4"><?php echo $row['data_inicio']; ?></td>
-                            <td class="px-6 py-4"><?php echo htmlspecialchars($row['responsavel_tecnico']); ?></td>
-                            <td class="px-6 py-4"><?php echo htmlspecialchars($row['cliente']); ?></td>
-                            <td class="px-6 py-4 text-center">
+                            <td onclick="editarObra(<?php echo $obra_id; ?>)" class="px-6 py-4 border text-sm">
+                                <?php echo date('d/m/Y', strtotime($row['data_inicio'])); ?>
+                            </td>
+                            <td onclick="editarObra(<?php echo $obra_id; ?>)" class="px-6 py-4 border text-sm"><?php echo htmlspecialchars($row['responsavel_tecnico']); ?></td>
+                            <td onclick="editarObra(<?php echo $obra_id; ?>)" class="px-6 py-4 border text-sm"><?php echo htmlspecialchars($row['cliente']); ?></td>
+                            <!-- <td onclick="editarObra(<?php echo $obra_id; ?>)" class="px-6 py-4 text-center border">
                                 <button onclick="editarObra(<?php echo $obra_id; ?>)" class="hover:underline ml-2">
                                     <i class="fas fa-eye mr-3 text-gray-500"></i>
                                 </button>
@@ -133,7 +130,7 @@ $result = $stmt->get_result();
                                         <i class="fas fa-trash mr-1"></i> Excluir
                                     </button>
                                 </form>
-                            </td>
+                            </td> -->
                         </tr>
 
                         <!-- Linha expandida com as solicitações -->

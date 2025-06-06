@@ -71,7 +71,7 @@
   <div class="flex justify-between items-center ">
     <div class="flex items-center ">
       <img class="w-12" src="../../assets/logo/il_fullxfull.2974258879_pxm3.webp" alt="">
-      <h2 class="text-[12px] text-[#2B3A4B] font-bold">Zion Managment</h2>
+      <h2 class="text-[12px] text-[#2B3A4B] font-bold">Zion</h2>
     </div>
 
   </div>
@@ -80,7 +80,7 @@
 
   <div class="absolute bottom-0 text-sm text-gray-700 leading-4 mb-2">
 
-    <p class="text-[14px]" id="userEmail"></p>
+    <p class="text-[14px] truncate w-[200px] whitespace-nowrap overflow-hidden" id="userEmail"></p>
     <p class="text-[12px]" id="userCompany"></p>
 
     <button id="logoutButton" class="flex items-center py-4 mt-2  rounded transition-all   text-gray-800">
@@ -170,8 +170,7 @@
           let menuHTML = `<ul>
           `;
 
-
-          if (['contratante'].includes(!setor_nome.toLowerCase())) {
+          if (setor_nome.toLowerCase() !== 'contratante') {
             menuHTML += `
             ${getMenuItem('../../home', 'fas fa-home', 'Início')}
 
@@ -181,12 +180,14 @@
           if (['gestão', 'tecnologia'].includes(setor_nome.toLowerCase())) {
             menuHTML += `
               ${getMenuItem('../../empresas', 'fas fa-diagram-project', 'Matriz e Filiais')}
+              ${getMenuItem('../../notas', 'fas fa-diagram-project', 'Notas Fiscais')}
               ${getMenuItem('../../contratos', 'fas fa-diagram-project', 'Contratos')}
+              ${getMenuItem('../../licitacoes', 'fas fa-diagram-project', 'Licitações')}
 
             `;
           }
 
-          if (['contratante'].includes(setor_nome.toLowerCase())) {
+          if (setor_nome.toLowerCase() === 'contratante') {
             menuHTML += `
               ${getMenuItem('../../os', 'fas fa-clipboard-list', 'Ordens de Serviço')}
             `;
@@ -203,6 +204,8 @@
               ${getMenuItem('../../projetos', 'fa-solid fa-ruler-combined', 'Projetos')}
               ${getMenuItem('../../Obras', 'fa-solid fa-trowel-bricks', 'Obras')}
               ${getMenuItem('../../os', 'fas fa-clipboard-list', 'Ordens de Serviço')}
+              ${getMenuItem('../../recursos', 'fas fa-shopping-cart', 'Solicitações')}
+
             `;
           }
 
@@ -211,7 +214,6 @@
 
           if (['gestão', 'tecnologia'].includes(setor_nome.toLowerCase())) {
             menuHTML += `
-          ${getMenuItem('../../recursos', 'fas fa-shopping-cart', 'Fluxo de Compras')}
           ${getMenuItem('../../cotacoes', 'fas fa-shopping-cart', 'Cotações')}
           ${getMenuWithDropdown('fas fa-money-check-alt', 'Centro de Custo', [
             { href: '../../transacoes', label: 'Entradas', icon: 'fas fa-arrow-circle-down' },
@@ -223,6 +225,36 @@
 
 
 
+
+
+
+          if (['compras'].includes(setor_nome.toLowerCase())) {
+            menuHTML += `
+          ${getMenuItem('../../recursos', 'fas fa-shopping-cart', 'Solicitações')}
+          ${getMenuItem('../../cotacoes', 'fas fa-shopping-cart', 'Cotações')}
+        `;
+
+
+          }
+
+
+
+          if (['th'].includes(setor_nome.toLowerCase())) {
+            menuHTML += `
+          ${getMenuItem('../../profissionais', 'fas fa-clipboard-list', 'Profissionais')}
+
+        `;
+          }
+
+
+
+          if (['licitação'].includes(setor_nome.toLowerCase())) {
+            menuHTML += `
+             ${getMenuItem('../../contratos', 'fas fa-diagram-project', 'Contratos')}
+              ${getMenuItem('../../licitacoes', 'fas fa-diagram-project', 'Licitações')}
+
+        `;
+          }
 
 
 
@@ -252,9 +284,19 @@
         menuContent.innerHTML += setorSelectHTML;
         menuContent.innerHTML += `<div id="menuContainer"></div>`;
 
-        const setorSalvo = localStorage.getItem('setor_override');
-        const setorParaRenderizar = setorSalvo || usuario.setor_nome;
+        let setorParaRenderizar;
+
+        if (['gestão', 'tecnologia'].includes(usuario.setor_nome.toLowerCase())) {
+          const setorSalvo = localStorage.getItem('setor_override');
+          setorParaRenderizar = setorSalvo || usuario.setor_nome;
+        } else {
+          setorParaRenderizar = usuario.setor_nome;
+          localStorage.removeItem('setor_override'); // limpar override se não permitido
+        }
+
         renderMenu(setorParaRenderizar);
+
+
 
         const setorDropdown = document.getElementById('setor');
         if (setorDropdown.tagName === 'SELECT') {

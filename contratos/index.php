@@ -27,6 +27,7 @@ $sql = "
     FROM contratos c
     JOIN empresas e ON c.empresa_id = e.id
     WHERE c.empresa_id = ?
+      AND c.aditivo = FALSE
     ORDER BY c.criado_em DESC
 ";
 
@@ -93,31 +94,65 @@ $result = $stmt->get_result();
       <table class="min-w-full divide-y divide-gray-200">
         <thead>
           <tr class="">
-            <th class="px-6 py-3 text-left text-sm uppercase">N°Contrato</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">N°Empenho</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Cliente</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Polo</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Data Inicio</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Data Fim</th>
+            <th class="px-6 py-3 text-left text-sm  border">N°Contrato</th>
+            <th class="px-6 py-3 text-left text-sm  border">N°Empenho</th>
+            <th class="px-6 py-3 text-left text-sm  border">Contratante</th>
+            <th class="px-6 py-3 text-left text-sm  border">Polo</th>
+            <th class="px-6 py-3 text-left text-sm  border">Data Inicio</th>
+            <th class="px-6 py-3 text-left text-sm  border">Data Fim</th>
 
-            <th class="px-6 py-3 text-left text-sm uppercase">Situação</th>
+            <th class="px-6 py-3 text-left text-sm  border">Situação</th>
 
-            <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
+            <!-- <th class="px-6 py-3 text-center text-sm ">Ações</th> -->
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
           <?php while ($row = $result->fetch_assoc()) { ?>
             <tr class="hover:bg-gray-100" onclick="visualizarContrato(<?php echo $row['id']; ?>)">
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['numero_contrato']); ?></td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['numero_empenho']); ?></td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['nome_cliente']); ?></td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['localizacao']); ?></td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars(date('d/m/Y', strtotime($row['dt_inicio']))); ?></td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars(date('d/m/Y', strtotime($row['dt_fim']))); ?></td>
+              <td class="px-6 py-4 border text-sm"><?php echo htmlspecialchars($row['numero_contrato']); ?></td>
+              <td class="px-6 py-4 border text-sm"><?php echo htmlspecialchars($row['numero_empenho']); ?></td>
+              <td class="px-6 py-4 border text-sm">
+                <?php
+                $nome = htmlspecialchars($row['nome_cliente']);
+                $partes = explode(' ', $nome);
+                $abreviado = '';
 
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['situacao']); ?></td>
+                if (count($partes) >= 1) {
+                  $abreviado .= $partes[0]; // Primeiro nome completo
+                }
 
-              <td class="px-6 py-4 text-center">
+                for ($i = 1; $i < min(3, count($partes)); $i++) {
+                  $abreviado .= ' ' . strtoupper(substr($partes[$i], 0, 1)) . '.';
+                }
+
+                echo $abreviado;
+                ?>
+              </td>
+              <td class="px-6 py-4 borde text-sm"><?php echo htmlspecialchars($row['localizacao']); ?></td>
+              <td class="px-6 py-4 border text-sm"><?php echo htmlspecialchars(date('d/m/Y', strtotime($row['dt_inicio']))); ?></td>
+              <td class="px-6 py-4 border text-sm"><?php echo htmlspecialchars(date('d/m/Y', strtotime($row['dt_fim']))); ?></td>
+
+              <td class="px-6 py-4 border text-sm">
+                <?php
+                $status = htmlspecialchars($row['situacao']);
+
+                // Define a cor de fundo com base no status
+                $statusClasses = [
+                  'Cancelado'  => 'bg-red-100 text-red-800',
+                  'Inativo'    => 'bg-gray-200 text-gray-800',
+                  'Suspenso'   => 'bg-yellow-100 text-yellow-800',
+                  'Ativo'      => 'bg-green-100 text-green-800',
+                  'Concluido'  => 'bg-blue-100 text-blue-800',
+                  'Pendências' => 'bg-red-500 text-white',
+                ];
+
+                $class = isset($statusClasses[$status]) ? $statusClasses[$status] : 'bg-gray-100 text-gray-800';
+
+                echo "<span class='px-3 py-1 rounded-full font-medium text-sm {$class}'>{$status}</span>";
+                ?>
+              </td>
+
+              <!-- <td class="px-6 py-4 text-center">
 
 
                 <button onclick="visualizarContrato(<?php echo $row['id']; ?>)" class=" hover:underline ml-2">
@@ -131,7 +166,7 @@ $result = $stmt->get_result();
                     <i class="fas fa-trash mr-3"></i>
                   </button>
                 </form>
-              </td>
+              </td> -->
             </tr>
           <?php } ?>
         </tbody>

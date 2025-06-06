@@ -167,7 +167,7 @@ while ($row = $resultServicos->fetch_assoc()) {
 
 
 
-            <header class="bg-white rounded-2xl shadow-lg p-6 mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <header class="bg-white rounded-2xl shadow-lg p-6 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <!-- Título e botão voltar -->
                 <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                     <button onclick="window.location.href='../os'" class="text-gray-600 hover:text-primary transition self-start sm:self-auto">
@@ -184,7 +184,7 @@ while ($row = $resultServicos->fetch_assoc()) {
                         onclick="window.location.href='./relatorio_fotografico?sc_id=<?php echo htmlspecialchars($os['id']); ?>'"
                         class="bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center justify-center gap-2">
                         <i class="fas fa-camera-retro"></i>
-                        Diarío de Obras
+                        Registro Fotográfico
                     </button>
 
                     <button
@@ -199,7 +199,7 @@ while ($row = $resultServicos->fetch_assoc()) {
 
 
             <!-- Formulário -->
-            <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            <form method="POST" enctype="multipart/form-data" class="space-y-6 mt-6 bg-white px-8 py-10 rounded shadow">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <?php if (isset($os['id'])): ?>
                         <input id="osId" type="hidden" name="id" value="<?= htmlspecialchars($os['id']) ?>">
@@ -363,23 +363,23 @@ while ($row = $resultServicos->fetch_assoc()) {
                     <table class="w-full table-auto border-collapse rounded-lg overflow-hidden">
                         <thead class="bg-[#F3F5F7] text-left">
                             <tr>
-                                <th class="p-3">Nome</th>
-                                <th class="p-3">Unidade</th>
-                                <th class="p-3">Quantidade</th>
-                                <th class="p-3">Tipo</th>
-                                <th class="p-3">Executor</th>
-                                <th class="p-3">Ação</th>
+                                <th class="p-3 border">Nome</th>
+                                <th class="p-3 border">Unidade</th>
+                                <th class="p-3 border">Quantidade</th>
+                                <th class="p-3 border">Tipo</th>
+                                <th class="p-3 border">Executor</th>
+                                <th class="p-3 border">Ação</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <?php foreach ($servicos as $servico): ?>
                                 <tr class="servicoItem" data-servico-id="<?= $servico['id'] ?>">
-                                    <td class="p-3 font-semibold"><?= htmlspecialchars($servico['nome']) ?></td>
-                                    <td class="p-3"><?= htmlspecialchars($servico['und_do_servico']) ?></td>
-                                    <td class="p-3"><?= htmlspecialchars($servico['quantidade']) ?></td>
-                                    <td class="p-3"><?= htmlspecialchars($servico['tipo_servico']) ?></td>
-                                    <td class="p-3"><?= htmlspecialchars($servico['executor']) ?></td>
-                                    <td class="p-3">
+                                    <td class="p-3 font-semibold border"><?= htmlspecialchars($servico['nome']) ?></td>
+                                    <td class="p-3 border"><?= htmlspecialchars($servico['und_do_servico']) ?></td>
+                                    <td class="p-3 border"><?= htmlspecialchars($servico['quantidade']) ?></td>
+                                    <td class="p-3 border"><?= htmlspecialchars($servico['tipo_servico']) ?></td>
+                                    <td class="p-3 border"><?= htmlspecialchars($servico['executor']) ?></td>
+                                    <td class="p-3 border">
                                         <button class="text-red-500 hover:text-red-700 removeServicoBtn">Remover</button>
                                     </td>
                                 </tr>
@@ -467,7 +467,7 @@ while ($row = $resultServicos->fetch_assoc()) {
                             <label for="tipo_servico" class="block text-sm font-medium text-gray-700">Tipo de Serviço</label>
                             <select id="tipo_servico" name="tipo_servico" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
                                 <option value="preventiva">Preventiva</option>
-                                <option value="corretiva">Manutenção</option>
+                                <option value="corretiva">Corretiva</option>
                             </select>
                         </div>
 

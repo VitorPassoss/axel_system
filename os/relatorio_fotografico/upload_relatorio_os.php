@@ -1,9 +1,9 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['enviar_relatorio'])) {
-    $conn = new mysqli('localhost', 'root', '', 'axel_db');
+    include '../backend/dbconn.php';
 
     if ($conn->connect_error) {
-        die("Erro de conexão: " . $conn->connect_error);
+        die("Conexão falhou: " . $conn->connect_error);
     }
 
     $observacao = trim($_POST['observacao'] ?? '');

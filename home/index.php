@@ -68,7 +68,7 @@
       </a>
 
       <!-- Card: Gerar Cotação -->
-      <a href="../cotacao" class="bg-white hover:shadow-lg transition-all rounded-xl p-10 flex items-start gap-4 border border-gray-200">
+      <a href="../cotacoes" class="bg-white hover:shadow-lg transition-all rounded-xl p-10 flex items-start gap-4 border border-gray-200">
         <div class="p-3 bg-purple-100 text-purple-600 rounded-full">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
             viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

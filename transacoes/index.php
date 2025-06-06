@@ -54,14 +54,14 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
 </head>
 
 <div id="modal-criar" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
-  <div class="relative bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-2xl w-11/12 md:w-2/3 lg:w-1/2 animate-fadeIn">
+  <div class="relative   p-8 rounded-2xl shadow-2xl w-11/12 md:w-2/3 lg:w-1/2 animate-fadeIn bg-white">
 
     <!-- Botão Fechar -->
     <button onclick="toggleModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-3xl">
       &times;
     </button>
 
-    <h2 class="text-3xl font-bold text-gray-800 dark:text-black mb-6 text-center">Nova Transação</h2>
+    <h2 class="text-3xl font-bold text-gray-800  mb-6 text-center">Nova Transação</h2>
 
     <!-- Formulário -->
     <form id="form-transacao" class="space-y-6">
@@ -142,13 +142,13 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
       <table class="min-w-full divide-y divide-gray-200">
         <thead>
           <tr>
-            <th class="px-6 py-3 text-left text-sm uppercase">Descrição</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Status</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Valor</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Categoria</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Data</th>
+            <th class="px-6 py-3 text-left text-sm ">Descrição</th>
+            <th class="px-6 py-3 text-left text-sm ">Status</th>
+            <th class="px-6 py-3 text-left text-sm ">Valor</th>
+            <th class="px-6 py-3 text-left text-sm ">Categoria</th>
+            <th class="px-6 py-3 text-left text-sm ">Data</th>
 
-            <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
+            <th class="px-6 py-3 text-center text-sm ">Ações</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">

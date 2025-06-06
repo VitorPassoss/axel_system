@@ -75,8 +75,8 @@ foreach ($data['insumos'] as $insumo) {
     }
 
     // Insere item na sc_item
-    $insertItem = $conn->prepare("INSERT INTO sc_item (solicitacao_id, insumo_id, quantidade, fornecedor, grau) VALUES (?, ?, ?, '', ?)");
-    $insertItem->bind_param("iiss", $solicitacao_id, $insumo_id, $quantidade, $grau_insumo);
+    $insertItem = $conn->prepare("INSERT INTO sc_item (solicitacao_id, insumo_id, quantidade, fornecedor, grau, und_medida) VALUES (?, ?, ?, '', ?, ?)");
+    $insertItem->bind_param("iisss", $solicitacao_id, $insumo_id, $quantidade, $grau_insumo, $unidade);
 
     if (!$insertItem->execute()) {
         echo json_encode(["erro" => "Erro ao inserir item da solicitação: " . $insertItem->error]);
@@ -89,4 +89,3 @@ foreach ($data['insumos'] as $insumo) {
 echo json_encode(["sucesso" => true, "mensagem" => "Solicitação criada com sucesso."]);
 
 $conn->close();
-?>

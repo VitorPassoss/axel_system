@@ -26,7 +26,7 @@
 
       <img class="w-[140px] " src="https://i.etsystatic.com/25290379/r/il/19a886/2974258879/il_fullxfull.2974258879_pxm3.jpg" alt="">
 
-      <h2 class="text-3xl font-bold mb-8 text-center">Zion Managment </h2>
+      <h2 class="text-3xl font-bold mb-8 text-center">Zion </h2>
 
     </div>
     <div class="mb-6">

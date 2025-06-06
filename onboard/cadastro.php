@@ -1,10 +1,9 @@
 <?php
 // conexão com o banco
-$conn = new mysqli('localhost', 'root', '', 'axel_db');
+include '../backend/dbconn.php';
 
-// verificar conexão
 if ($conn->connect_error) {
-  die("Falha na conexão: " . $conn->connect_error);
+  die("Conexão falhou: " . $conn->connect_error);
 }
 
 // Buscar setores

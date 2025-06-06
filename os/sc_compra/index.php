@@ -350,14 +350,7 @@ if (isset($_GET['sc_id'])) {
                         <div class="text-sm text-blue-800 font-semibold">Total de Solicitações</div>
                         <div class="text-2xl text-blue-900 font-bold"><?= $totalSolicitacoes ?></div>
                     </div>
-                    <div class="bg-green-50 border border-green-200 p-4 rounded-lg text-center">
-                        <div class="text-sm text-green-800 font-semibold">Valor Total Solicitado</div>
-                        <div class="text-2xl text-green-900 font-bold"><?= $totalInsumos ?></div>
-                    </div>
-                    <div class="bg-purple-50 border border-purple-200 p-4 rounded-lg text-center">
-                        <div class="text-sm text-purple-800 font-semibold">Valor Total Aprovado</div>
-                        <div class="text-2xl text-purple-900 font-bold"><?= $quantidadeTotal ?></div>
-                    </div>
+           
                 </div>
                 <?php if (!empty($solicitacoes)): ?>
                     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -397,13 +390,27 @@ if (isset($_GET['sc_id'])) {
                                                                 <span class="font-semibold text-gray-500">ID:</span>
                                                                 <span class="ml-1"><?= htmlspecialchars($item['id']) ?></span>
                                                             </div>
+                                                            <?php
+                                                            $insumoNome = 'Insumo não encontrado';
+                                                            if (!empty($item['insumo_id'])) {
+                                                                $stmtInsumo = $conn->prepare("SELECT nome FROM insumos WHERE id = ?");
+                                                                $stmtInsumo->bind_param("i", $item['insumo_id']);
+                                                                $stmtInsumo->execute();
+                                                                $resultInsumo = $stmtInsumo->get_result();
+                                                                if ($resultInsumo && $rowInsumo = $resultInsumo->fetch_assoc()) {
+                                                                    $insumoNome = $rowInsumo['nome'];
+                                                                }
+                                                                $stmtInsumo->close();
+                                                            }
+                                                            ?>
                                                             <div class="mb-1">
-                                                                <span class="font-semibold text-gray-500">Insumo ID:</span>
-                                                                <span class="ml-1"><?= htmlspecialchars($item['insumo_id']) ?></span>
+                                                                <span class="font-semibold text-gray-500">Insumo:</span>
+                                                                <span class="ml-1"><?= htmlspecialchars($insumoNome) ?></span>
                                                             </div>
+
                                                             <div>
                                                                 <span class="font-semibold text-gray-500">Quantidade:</span>
-                                                                <span class="ml-1"><?= htmlspecialchars($item['quantidade']) ?></span>
+                                                                <span class="ml-1"><?= htmlspecialchars($item['quantidade']) ?>/<?= htmlspecialchars($item['und_medida']) ?> </span>
                                                             </div>
 
                                                             <?php

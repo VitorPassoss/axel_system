@@ -289,7 +289,7 @@ class QRcode {
 	protected $hint = QR_MODE_8B;
 
 	/**
-	 * Boolean flag, if true the input string will be converted to uppercase.
+	 * Boolean flag, if true the input string will be converted to .
 	 * @protected
 	 */
 	protected $casesensitive = true;

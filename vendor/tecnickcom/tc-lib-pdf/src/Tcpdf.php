@@ -169,7 +169,7 @@ class Tcpdf extends \Com\Tecnick\Pdf\ClassObjects
      * if PCRE unicode support is turned ON ("\P" is the negate class of "\p"):
      *      \s     : any whitespace character
      *      \p{Z}  : any separator
-     *      \p{Lo} : Unicode letter or ideograph that does not have lowercase and uppercase variants.
+     *      \p{Lo} : Unicode letter or ideograph that does not have lowercase and  variants.
      *      \xa0   : Unicode Character 'NO-BREAK SPACE' (U+00A0)
      * </pre>
      *

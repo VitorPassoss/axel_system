@@ -32,7 +32,7 @@ namespace Com\Tecnick\Barcode\Type\Square\Aztec;
 class Data
 {
     /**
-     * Code character encoding mode for uppercase letters.
+     * Code character encoding mode for  letters.
      *
      * @var int
      */

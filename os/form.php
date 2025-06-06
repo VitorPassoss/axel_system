@@ -287,7 +287,7 @@ while ($row = $resultServicos->fetch_assoc()) {
                     <label for="tipo_servico" class="block text-sm font-medium text-gray-700">Tipo de Serviço</label>
                     <select id="tipo_servico" name="tipo_servico" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
                         <option value="preventiva">Preventiva</option>
-                        <option value="corretiva">Manutenção</option>
+                        <option value="corretiva">Corretiva</option>
                     </select>
                 </div>
 
@@ -300,13 +300,13 @@ while ($row = $resultServicos->fetch_assoc()) {
                 <!-- Data de Início -->
                 <div class="mb-4">
                     <label for="dt_inicio" class="block text-sm font-medium text-gray-700">Data de Início</label>
-                    <input type="date" id="dt_inicio" name="dt_inicio" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                    <input   type="date" id="dt_inicio" name="dt_inicio" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" >
                 </div>
 
                 <!-- Data Final -->
                 <div class="mb-4">
                     <label for="dt_final" class="block text-sm font-medium text-gray-700">Data Final</label>
-                    <input type="date" id="dt_final" name="dt_final" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                    <input type="date" id="dt_final" name="dt_final" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" >
                 </div>
 
                 <!-- Botões -->

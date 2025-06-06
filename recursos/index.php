@@ -1,9 +1,6 @@
 <?php
 include '../backend/auth.php';
 include '../layout/imports.php';
-
-// Conexão com o banco de dados
-
 include '../backend/dbconn.php';
 
 if ($conn->connect_error) {
@@ -12,34 +9,50 @@ if ($conn->connect_error) {
 
 $empresa_id_sessao = $_SESSION['empresa_id'];
 
-// Filtros recebidos via GET
 $filtro_empresa = $_GET['empresa_id'] ?? '';
 $filtro_obra = $_GET['obra_id'] ?? '';
+$filtro_contrato = $_GET['contrato_id'] ?? '';
+$filtro_periodo = $_GET['periodo'] ?? '';
 
-// Consulta de empresas para o filtro
+// Empresas para o select
 $empresas = $conn->query("SELECT id, nome FROM empresas");
 
-// Consulta de obras da empresa logada (ou da empresa filtrada, se houver)
+// Obras com base na empresa selecionada
 $empresa_para_obras = !empty($filtro_empresa) ? intval($filtro_empresa) : $empresa_id_sessao;
-$obras = $conn->query("SELECT * FROM ordem_de_servico WHERE empresa_id = $empresa_para_obras");
+$obras = $conn->query("SELECT id, nome FROM obras WHERE empresa_id = $empresa_para_obras");
 
-// Montagem do WHERE dinâmico
+// Contratos com base na empresa selecionada
+$contratos = $conn->query("SELECT id, numero_contrato FROM contratos WHERE empresa_id = $empresa_para_obras");
+
+// WHERE dinâmico
 $where = "WHERE sc.empresa_id = ?";
-$params = [$empresa_id_sessao];
+$params = [$empresa_para_obras];
 $types = "i";
 
-if (!empty($filtro_empresa)) {
-  $where = "WHERE sc.empresa_id = ?";
-  $params = [intval($filtro_empresa)];
-}
-
+// Filtro de obra (relacionamento via os.obra_id)
 if (!empty($filtro_obra)) {
-  $where .= " AND sc.obra_id = ?";
+  $where .= " AND os.obra_id = ?";
   $params[] = intval($filtro_obra);
   $types .= "i";
 }
 
-// Consulta final com joins
+// Filtro de contrato
+if (!empty($filtro_contrato)) {
+  $where .= " AND os.contrato_id = ?";
+  $params[] = intval($filtro_contrato);
+  $types .= "i";
+}
+
+// Filtro de período
+if (!empty($filtro_periodo)) {
+  if ($filtro_periodo == 'hoje') {
+    $where .= " AND DATE(sc.criado_em) = CURDATE()";
+  } elseif ($filtro_periodo == 'mes') {
+    $where .= " AND MONTH(sc.criado_em) = MONTH(CURDATE()) AND YEAR(sc.criado_em) = YEAR(CURDATE())";
+  }
+}
+
+// Consulta final
 $sql = "
 SELECT 
     sc.id,
@@ -73,10 +86,31 @@ ORDER BY
 ";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $empresa_id_sessao);
+$stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
+
+$user_id = $_SESSION['user_id'];
+
+$stmt = $conn->prepare("
+    SELECT 
+        u.id, u.email, u.setor_id, u.empresa_id,
+        s.nome AS setor_nome,
+        e.nome AS empresa_nome
+    FROM users u
+    LEFT JOIN setores s ON u.setor_id = s.id
+    LEFT JOIN empresas e ON u.empresa_id = e.id
+    WHERE u.id = ?
+");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$rest = $stmt->get_result();
+$usuario = $rest->fetch_assoc();
+
+
+
 ?>
+
 
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -117,9 +151,10 @@ $result = $stmt->get_result();
 
   <div class="flex-1 p-8 space-y-8">
     <!-- Cabeçalho -->
-    <div class="flex flex-row justify-between items-center justify-center shadow  bg-[#FFFFFF] py-6 px-6 rounded-2xl ">
+    <div
+      class="flex flex-row justify-between items-center justify-center shadow  bg-[#FFFFFF] py-6 px-6 rounded-2xl ">
       <div class="">
-        <h1 class="text-3xl font-bold text-primary">Fluxo de Compras</h1>
+        <h1 class="text-3xl font-bold text-primary">Solicitações de Compra</h1>
       </div>
 
 
@@ -127,35 +162,103 @@ $result = $stmt->get_result();
 
     <!-- Tabela -->
     <div class="overflow-x-auto  rounded-lg shadow-lg bg-white">
-      <form method="GET" class="mb-1 flex gap-2 items-center">
+      <form method="GET" class="mb-1 flex items-center">
         <!-- Filtro de Empresa -->
-        <div class="flex items-center gap-2 px-4 py-4">
+        <div class="flex items-center px-4 py-4">
           <div>
             <i class="fas fa-building text-gray-500"></i> <!-- Ícone de empresa -->
             <label for="empresa_id" class="text-sm font-medium text-gray-700">Empresa</label>
 
-            <select name="empresa_id" id="empresa_id" class="mt-1 block w-full p-2 mt-2 sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            <select name="empresa_id" id="empresa_id"
+              class="mt-1 block w-full p-2 mt-2 sm:w-[150px] border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
               <option value="">Todas</option>
               <?php while ($empresa = $empresas->fetch_assoc()) { ?>
-                <option value="<?= $empresa['id'] ?>" <?= $filtro_empresa == $empresa['id'] ? 'selected' : '' ?>>
+                <option value="<?= $empresa['id'] ?>"
+                  <?= $filtro_empresa == $empresa['id'] ? 'selected' : '' ?>>
                   <?= htmlspecialchars($empresa['nome']) ?>
                 </option>
               <?php } ?>
             </select>
           </div>
         </div>
+
+        <!-- Filtro de Obra -->
+        <div class="flex items-center">
+          <div>
+            <i class="fas fa-hammer text-gray-500"></i> <!-- Ícone de obra -->
+            <label for="obra_id" class="text-sm font-medium text-gray-700">Obra</label>
+            <select name="obra_id" id="obra_id"
+              class="mt-1 p-2 block mt-2 w-full sm:w-[150px] border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+              <option value="">Todas</option>
+              <?php while ($obra = $obras->fetch_assoc()) { ?>
+                <option value="<?= $obra['id'] ?>" <?= $filtro_obra == $obra['id'] ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($obra['nome']) ?>
+                </option>
+              <?php } ?>
+            </select>
+          </div>
+
+          <!-- Filtro de Contrato -->
+          <div class="flex items-center  px-4 py-4">
+            <div>
+              <i class="fas fa-file-contract text-gray-500"></i>
+              <label for="contrato_id" class="text-sm font-medium text-gray-700">Contrato</label>
+              <select name="contrato_id" id="contrato_id"
+                class="mt-1 block w-full p-2 mt-2 sm:w-[150px] border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Todos</option>
+                <?php
+                $contratos = $conn->query("SELECT id, numero_contrato FROM contratos WHERE empresa_id = $empresa_id_sessao");
+                while ($contrato = $contratos->fetch_assoc()) {
+                ?>
+                  <option value="<?= $contrato['id'] ?>"
+                    <?= ($_GET['contrato_id'] ?? '') == $contrato['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($contrato['numero_contrato']) ?>
+                  </option>
+                <?php } ?>
+              </select>
+            </div>
+          </div>
+
+          <!-- Filtro de Data -->
+          <div class="flex items-center  ">
+            <div>
+              <i class="fas fa-calendar text-gray-500"></i>
+              <label for="periodo" class="text-sm font-medium text-gray-700">Período</label>
+              <select name="periodo" id="periodo"
+                class="mt-1 block w-full p-2 mt-2 sm:w-[150px] border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Todos</option>
+                <option value="hoje" <?= ($_GET['periodo'] ?? '') == 'hoje' ? 'selected' : '' ?>>Hoje
+                </option>
+                <option value="mes" <?= ($_GET['periodo'] ?? '') == 'mes' ? 'selected' : '' ?>>Este Mês
+                </option>
+              </select>
+            </div>
+          </div>
+
+
+          <div class="flex items-center ">
+            <button type="submit"
+              class="flex items-center bg-black mt-7 ml-4 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50">
+              <i class="fas fa-filter mr-2"></i> <!-- Ícone de filtro -->
+              Filtrar
+            </button>
+          </div>
+        </div>
+
         <!-- Botão de Filtro -->
 
       </form>
       <table class="min-w-full divide-y divide-gray-200">
         <thead>
           <tr>
-            <th class="px-4 py-3 text-left text-sm uppercase">Solicitante</th>
-            <th class="px-4 py-3 text-left text-sm uppercase">Obra</th>
-            <th class="px-4 py-3 text-left text-sm uppercase">Contrato</th>
-            <th class="px-4 py-3 text-left text-sm uppercase">O.S</th>
-            <th class="px-4 py-1 text-left text-sm uppercase">Status</th>
-            <th class="px-4 py-3 text-center text-sm uppercase w-[160px]">Ações</th>
+            <th class="px-4 py-3 text-left text-sm  border">Solicitante</th>
+            <th class="px-4 py-3 text-left text-sm  border">Descrição</th>
+
+            <th class="px-4 py-3 text-left text-sm  border">Obra</th>
+            <!-- <th class="px-4 py-3 text-left text-sm  border">Contrato</th> -->
+            <th class="px-4 py-3 text-left text-sm  border">O.S</th>
+            <th class="px-4 py-1 text-left text-sm  border">Status</th>
+            <th class="px-4 py-3 text-center text-sm  w-[160px] border">Ações</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
@@ -163,38 +266,92 @@ $result = $stmt->get_result();
             $id = $row['id'];
           ?>
             <tr class="hover:bg-gray-100" id="btn-<?= $id ?>" onclick="toggleDropdown(<?= $id ?>)">
-              <td class="px-4 py-2"><?= htmlspecialchars($row['solicitante']) ?></td>
-              <td class="px-4 py-2"><?= htmlspecialchars($row['nome_obra'] ?? '-') ?></td>
-              <td class="px-4 py-2"><?= htmlspecialchars($row['numero_contrato'] ?? '-') ?></td>
-              <td class="px-4 py-2"><?= htmlspecialchars($row['os_id'] ?? '-') ?></td>
-              <td class="px-4 py-2">
+              <td class="px-4 py-2 border text-sm"><?= htmlspecialchars($row['solicitante']) ?></td>
+              <td class="px-2 py-2 border text-sm">
                 <?php
-                $status = htmlspecialchars($row['status']);
-                $bgColor = match (strtoupper($status)) {
-                  'PENDENTE', 'COTAÇÃO' => 'bg-blue-100 text-blue-800',
-                  'EM ANDAMENTO'        => 'bg-yellow-100 text-yellow-800',
-                  'APROVADO', 'PAGO'    => 'bg-green-100 text-green-800',
-                  'REJEITADO'           => 'bg-red-100 text-red-800',
-                  default               => 'bg-gray-100 text-gray-800',
-                };
-                $statusDisplay = strtoupper($status) === 'APROVADO' ? 'APROVADO P/COTAÇÃO' : $status;
+                $descricao = $row['descricao'] ?? '-';
+                $palavras = explode(' ', $descricao);
+
+                if (count($palavras) > 3) {
+                  echo htmlspecialchars(implode(' ', array_slice($palavras, 0, 3))) . '...';
+                } else {
+                  echo htmlspecialchars($descricao);
+                }
                 ?>
-                <span class="px-3 py-1 rounded-full text-[12px] font-semibold <?= $bgColor ?>">
+              </td>
+
+
+              <td class="px-4 py-2 border text-sm"><?= htmlspecialchars($row['nome_obra'] ?? '-') ?></td>
+              <!-- <td class="px-4 py-2 border"><?= htmlspecialchars($row['numero_contrato'] ?? '-') ?></td> -->
+              <td class="px-4 py-2 border text-sm"><?= htmlspecialchars($row['os_id'] ?? '-') ?></td>
+
+              <td class="px-4 py-2 border text-sm">
+                <?php
+                $status = strtoupper($row['status']);
+                $sc_id = intval($row['id']);
+                $statusDisplay = $status;
+                $bgColor = 'bg-gray-100 text-gray-800';
+                $buttonText = '';
+                $showButton = true;
+
+                // Verifica se há cotação associada
+                $cotacaoStmt = $conn->prepare("SELECT status FROM cotacao WHERE sc_id = ? LIMIT 1");
+                $cotacaoStmt->bind_param("i", $sc_id);
+                $cotacaoStmt->execute();
+                $cotacaoResult = $cotacaoStmt->get_result();
+                $cotacao = $cotacaoResult->fetch_assoc();
+                $cotacaoStmt->close();
+
+                if ($status === 'PENDENTE') {
+                  $statusDisplay = 'PENDENTE';
+                  $bgColor = 'bg-blue-100 text-blue-800';
+
+                  if ($usuario['setor_nome'] == "Gestão") {
+                    $buttonText = 'Aprovar Solicitação';
+                  } else {
+                    $showButton = false;
+                  }
+                } elseif ($status === 'APROVADO') {
+                  if (!$cotacao) {
+                    $statusDisplay = 'APROVADO P/COTAÇÃO';
+                    $bgColor = 'bg-green-100 text-green-800';
+
+                    $buttonText = 'Iniciar Cotação';
+
+                    if ($usuario['setor_nome'] == "Gestão" || $usuario['setor_nome'] == "Operacional") {
+                      $showButton = false;
+                    }
+                  } elseif ($cotacao['status'] !== 'aprovado') {
+                    $statusDisplay = 'PARA APROVAR COTAÇÃO';
+                    $bgColor = 'bg-sky-100 text-sky-800';
+                    $buttonText = 'Ver Cotação';
+                  } else {
+                    $statusDisplay = 'AGUARDANDO COMPRA';
+                    $bgColor = 'bg-indigo-100 text-indigo-800';
+                    $showButton = false;
+                  }
+                } elseif ($status === 'EM ANDAMENTO') {
+                  $bgColor = 'bg-yellow-100 text-yellow-800';
+                } elseif ($status === 'REJEITADO') {
+                  $bgColor = 'bg-red-100 text-red-800';
+                } elseif ($status === 'PAGO') {
+                  $bgColor = 'bg-green-100 text-green-800';
+                }
+                ?>
+                <span class="px-3 py-1 rounded-full text-[12px]  <?= $bgColor ?>">
                   <?= $statusDisplay ?>
                 </span>
               </td>
-              <td class="px-4 py-2 text-center">
-                <?php
-                $status = strtoupper($row['status']);
-                $buttonText = ($status === 'APROVADO') ? 'Aguardando Cotação' : 'Aprovar Solicitação';
-                ?>
-                <button onclick="handleButtonClick(<?= $id ?>, '<?= $status ?>')" class="bg-green-600 text-[10px] p-2 rounded text-white">
-                  <?= $buttonText ?>
-                </button>
-                <form id="delete-<?= $id ?>" class="inline" onsubmit="return false;">
-                  <input type="hidden" name="id" value="<?= $id ?>">
-                </form>
+              <td class="px-4 py-2 text-center border text-sm">
+                <?php if ($showButton): ?>
+                  <button onclick="handleButtonClick(<?= $sc_id ?>, '<?= $statusDisplay ?>')"
+                    class="bg-green-600 text-[10px] p-2 rounded text-white">
+                    <?= $buttonText ?>
+                  </button>
+
+                <?php endif; ?>
               </td>
+
             </tr>
 
             <!-- Linha expandida (opcional) -->
@@ -216,7 +373,8 @@ $result = $stmt->get_result();
 
   </div>
 
-  <div id="modalCotacao" class="fixed inset-0 flex  z-50 items-center justify-center bg-gray-800 bg-opacity-50 hidden">
+  <div id="modalCotacao"
+    class="fixed inset-0 flex  z-50 items-center justify-center bg-gray-800 bg-opacity-50 hidden">
     <div class="bg-white p-4 rounded w-96">
       <h3 class="text-lg font-semibold mb-4">Iniciar Cotação</h3>
       <form action="processar_cotacao.php" method="POST">
@@ -231,7 +389,8 @@ $result = $stmt->get_result();
         <input type="hidden" name="solicitacao_id" value="<?= $id ?>">
         <div class="flex justify-end">
           <button type="submit" class="bg-blue-600 text-white p-2 rounded">Enviar Cotação</button>
-          <button type="button" onclick="fecharModal('modalCotacao')" class="ml-2 p-2 rounded bg-red-600 text-white">Cancelar</button>
+          <button type="button" onclick="fecharModal('modalCotacao')"
+            class="ml-2 p-2 rounded bg-red-600 text-white">Cancelar</button>
         </div>
       </form>
     </div>
@@ -242,11 +401,22 @@ $result = $stmt->get_result();
     <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
       <h2 class="text-lg font-semibold mb-4">Aprovar Solicitação</h2>
       <input type="hidden" id="modal-id-solicitacao">
+
       <label class="block text-sm font-medium text-gray-700 mb-1">Nome de quem está aprovando:</label>
-      <input type="text" id="input-aprovador" class="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring focus:border-blue-500" placeholder="Digite seu nome">
+      <input type="text" id="input-aprovador"
+        class="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring focus:border-blue-500"
+        placeholder="Digite seu nome">
+
+      <label class="block text-sm font-medium text-gray-700 mb-1">PIN:</label>
+      <input type="password" id="input-senha"
+        class="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring focus:border-blue-500"
+        placeholder="Digite o PIN">
+
       <div class="flex justify-end space-x-2">
-        <button onclick="fecharModal('modal-aprovar')" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Cancelar</button>
-        <button onclick="enviarAprovacao()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Aprovar</button>
+        <button onclick="fecharModal('modal-aprovar')"
+          class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Cancelar</button>
+        <button onclick="enviarAprovacao()"
+          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Aprovar</button>
       </div>
     </div>
   </div>
@@ -254,10 +424,22 @@ $result = $stmt->get_result();
 
   <script>
     function handleButtonClick(id, status) {
-      if (status === 'APROVADO') {
-        abrirModalCotacao();
-      } else {
-        abrirModalAprovacao(id);
+      switch (status) {
+        case 'PENDENTE':
+          abrirModalAprovacao(id);
+          break;
+        case 'APROVADO P/COTAÇÃO':
+          // Redireciona para o formulário de criação de cotação
+          window.location.href = '../cotacoes/form.php?sc_id=' + id;
+          break;
+        case 'PARA APROVAR COTAÇÃO':
+          // Redireciona para visualizar ou aprovar a cotação
+          window.location.href = '../cotacoes/detalhes.php?sc_id=' + id;
+          break;
+        default:
+          // fallback opcional
+          console.warn('Ação não definida para status:', status);
+          break;
       }
     }
 
@@ -278,9 +460,14 @@ $result = $stmt->get_result();
     async function enviarAprovacao() {
       const id = parseInt(document.getElementById('modal-id-solicitacao').value, 10);
       const aprovador = document.getElementById('input-aprovador').value.trim();
+      const senha = document.getElementById('input-senha').value;
 
       if (!id || aprovador === '') {
         alert('Por favor, informe seu nome para aprovação.');
+        return;
+      }
+      if (!senha) {
+        alert('Por favor, informe sua senha.');
         return;
       }
 
@@ -292,18 +479,16 @@ $result = $stmt->get_result();
           },
           body: JSON.stringify({
             id,
-            aprovador
+            aprovador,
+            senha
           })
         });
 
         const data = await response.json();
 
         if (data.success) {
-
           fecharModal('modal-aprovar');
-          window.location.reload()
-          // Aqui você pode adicionar uma lógica para atualizar a lista ou a linha da solicitação aprovada
-          // Exemplo: recarregar a página ou atualizar o status via JS
+          window.location.reload();
         } else {
           alert('Erro ao aprovar: ' + (data.error || 'Erro desconhecido'));
         }
@@ -343,7 +528,6 @@ $result = $stmt->get_result();
       <div><strong>Solicitante:</strong> ${data.solicitante}</div>
       <div><strong>Status:</strong> ${data.status}</div>
       <div><strong>Descrição:</strong> ${data.descricao}</div>
-      <div><strong>Valor:</strong> R$ ${data.valor}</div>
       <div><strong>Criado em:</strong> ${data.criado_em}</div>
     </div>
 
@@ -378,7 +562,7 @@ $result = $stmt->get_result();
 
 
     <div class="grid grid-cols-2 gap-2 bg-gray-50 p-4 rounded shadow">
-      <div><strong>Ordem de Serviço:</strong> ${data.ordem_de_servico.numero_os || data.ordem_de_servico.id}</div>
+      <div><strong>Ordem de Serviço:</strong> <a class="text-blue-700" href="../os/detalhes.php?sc_id=${data.ordem_de_servico.id}">${data.ordem_de_servico.id} </a> </div>
       <div><strong>Status OS:</strong> ${data.ordem_de_servico.status}</div>
     </div>
 
@@ -474,12 +658,10 @@ $result = $stmt->get_result();
 
   <style>
     .input {
-      @apply w-full p-3 bg-dark border border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent;
+      @apply w-full p-3 bg-dark border border-gray-700 rounded-lg focus: ring-2 focus:ring-primary focus:border-transparent;
     }
   </style>
 
 </body>
 
 </html>
-
-<?php $conn->close(); ?>
