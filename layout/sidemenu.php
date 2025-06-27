@@ -71,7 +71,7 @@
   <div class="flex justify-between items-center ">
     <div class="flex items-center ">
       <img class="w-12" src="../assets/logo/il_fullxfull.2974258879_pxm3.webp" alt="">
-      <h2 class="text-[12px] text-[#2B3A4B] font-bold">Zion Managment</h2>
+      <h2 class="text-[14px] text-[#2B3A4B] font-bold">Zion <span class="text-[10px]">Corporative</span></h2>
     </div>
 
   </div>
@@ -80,13 +80,17 @@
 
   <div class="absolute bottom-0 text-sm text-gray-700 leading-4 mb-2">
 
-    <p class="text-[14px]" id="userEmail"></p>
+    <p class="text-[14px] truncate w-[200px] whitespace-nowrap overflow-hidden" id="userEmail"></p>
     <p class="text-[12px]" id="userCompany"></p>
 
     <button id="logoutButton" class="flex items-center py-4 mt-2  rounded transition-all   text-gray-800">
       <i class="fas fa-sign-out-alt mr-3"></i> Sair
     </button>
+    
+     <p class="text-[10px]">1.0.1</p>
+
   </div>
+  
 </div>
 <script>
   document.getElementById('logoutButton').addEventListener('click', function() {
@@ -181,6 +185,7 @@
             menuHTML += `
               ${getMenuItem('../empresas', 'fas fa-diagram-project', 'Matriz e Filiais')}
               ${getMenuItem('../contratos', 'fas fa-diagram-project', 'Contratos')}
+              ${getMenuItem('../licitacoes', 'fas fa-diagram-project', 'Licitações')}
 
             `;
           }
@@ -199,31 +204,66 @@
 
           if (['projetos', 'gestão', 'tecnologia', 'operacional'].includes(setor_nome.toLowerCase())) {
             menuHTML += `
-              ${getMenuItem('../projetos', 'fa-solid fa-ruler-combined', 'Projetos')}
               ${getMenuItem('../Obras', 'fa-solid fa-trowel-bricks', 'Obras')}
               ${getMenuItem('../os', 'fas fa-clipboard-list', 'Ordens de Serviço')}
+              ${getMenuItem('../recursos', 'fas fa-shopping-cart', 'Solicitações')}
+              ${getMenuItem('../fornecedores', 'fas fa-boxes-stacked', 'Fornecedores')}
+              ${getMenuItem('../cotacoes', 'fas fa-shopping-cart', 'Cotações')}
+
+
             `;
           }
 
-
-
-
           if (['gestão', 'tecnologia'].includes(setor_nome.toLowerCase())) {
             menuHTML += `
-          ${getMenuItem('../recursos', 'fas fa-shopping-cart', 'Fluxo de Compras')}
-          ${getMenuItem('../cotacoes', 'fas fa-shopping-cart', 'Cotações')}
           ${getMenuWithDropdown('fas fa-money-check-alt', 'Centro de Custo', [
+            { href: '../transacoes/balance.php', label: 'Resumo', icon: 'fas fa-clipboard-list' },
             { href: '../transacoes', label: 'Entradas', icon: 'fas fa-arrow-circle-down' },
-            { href: '../transacoes/saidas.php', label: 'Saídas', icon: 'fas fa-arrow-circle-up' },
+            { href: '../transacoes/saidas.php', label: 'Saidas', icon: 'fas fa-arrow-circle-up' },
           ])}
+          ${getMenuItem('../profissionais', 'fas fa-clipboard-list', 'Profissionais')}
+
+        `;
+          }
+
+          if (['compras'].includes(setor_nome.toLowerCase())) {
+            menuHTML += `
+          ${getMenuItem('../recursos', 'fas fa-shopping-cart', 'Solicitações')}
+          ${getMenuItem('../cotacoes', 'fas fa-shopping-cart', 'Cotações')}
+          ${getMenuItem('../fornecedores', 'fas fa-boxes-stacked', 'Fornecedores')}
 
         `;
           }
 
 
+          if (['th'].includes(setor_nome.toLowerCase())) {
+            menuHTML += `
+          ${getMenuItem('../profissionais', 'fas fa-clipboard-list', 'Profissionais')}
 
+        `;
+          }
 
+          if (['licitação'].includes(setor_nome.toLowerCase())) {
+            menuHTML += `
+             ${getMenuItem('../contratos', 'fas fa-diagram-project', 'Contratos')}
+             ${getMenuItem('../licitacoes', 'fas fa-diagram-project', 'Licitações')}
+             ${getMenuItem('../Obras', 'fa-solid fa-trowel-bricks', 'Obras')}
+             ${getMenuItem('../notas', 'fas fa-arrow-circle-down', 'Notas')}
+        `;
+          }
 
+          if (['financeiro'].includes(setor_nome.toLowerCase())) {
+            menuHTML += `
+            ${getMenuItem('../recursos', 'fas fa-shopping-cart', 'Solicitações')}
+            ${getMenuItem('../cotacoes', 'fas fa-shopping-cart', 'Cotações')}
+            ${getMenuItem('../fornecedores', 'fas fa-boxes-stacked', 'Fornecedores')}
+            ${getMenuWithDropdown('fas fa-money-check-alt', 'Centro de Custo', [
+              { href: '../transacoes/balance.php', label: 'Resumo', icon: 'fas fa-clipboard-list' },
+              { href: '../transacoes', label: 'Entradas', icon: 'fas fa-arrow-circle-down' },
+              { href: '../transacoes/saidas.php', label: 'Saidas', icon: 'fas fa-arrow-circle-up' },
+            ])}
+        `;
+          }
 
           menuHTML += `</ul>`;
           document.getElementById('menuContainer').innerHTML = menuHTML;

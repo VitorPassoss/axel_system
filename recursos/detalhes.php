@@ -1,10 +1,6 @@
 <?php
 include '../backend/auth.php';
 include '../layout/imports.php';
-
-// Conexão com o banco de dados
-
-
 include '../backend/dbconn.php';
 
 if ($conn->connect_error) {
@@ -18,22 +14,20 @@ if (isset($_GET['sc_id'])) {
     $sc_id = intval($_GET['sc_id']);
     $stmt = $conn->prepare("
         SELECT 
-            sc.*, 
-            p.nome AS nome_projeto,
-            o.nome AS nome_obra
+            sc.* 
         FROM 
             solicitacao_compras sc
-        LEFT JOIN 
-            projetos p ON sc.projeto_id = p.id
-        LEFT JOIN 
-            obras o ON sc.obra_id = o.id
         WHERE 
-            sc.id = ? AND sc.empresa_id = ?");
+            sc.id = ? AND sc.empresa_id = ?
+    ");
     $stmt->bind_param("ii", $sc_id, $empresa_id);
     $stmt->execute();
     $result = $stmt->get_result();
     $solicitacao = $result->fetch_assoc();
 }
+
+
+
 ?>
 
 
@@ -121,14 +115,7 @@ if (isset($_GET['sc_id'])) {
                     </div>
 
                     <div class="flex flex-col">
-                        <!-- Verifica se há vínculo com Projeto -->
-                        <?php if (!empty($solicitacao['projeto_id'])): ?>
-                            <label for="projeto" class="text-gray-700 mb-1 text-sm font-medium">Projeto</label>
-                            <input type="text" id="projeto" name="projeto"
-                                value="<?= htmlspecialchars($solicitacao['nome_projeto'] ?? '') ?>"
-                                class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" readonly />
-                            <small class="text-blue-600"><a href="../projetos/detalhes.php?id=<?= $solicitacao['projeto_id'] ?>" target="_blank">Ver mais detalhes</a></small>
-                        <?php endif; ?>
+
 
                         <!-- Verifica se há vínculo com Obra -->
                         <?php if (!empty($solicitacao['obra_id'])): ?>

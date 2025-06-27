@@ -118,8 +118,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':quantidade' => $servico['quantidade'],
                         ':tipo_servico' => $servico['tipo'] ?? null,
                         ':executor' => $servico['executor'] ?? null,
-                        ':dt_inicio' => $servico['data_inicio'] ?? null,
-                        ':dt_final' => $servico['data_final'] ?? null,
+                        ':dt_inicio' => $servico['dt_inicio'] ?? null,
+                        ':dt_final' => $servico['dt_final'] ?? null,
                     ]);
                 }
             }

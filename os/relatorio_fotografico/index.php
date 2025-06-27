@@ -1,5 +1,10 @@
 <?php
 session_start();
+include '../../backend/dbconn.php';
+
+if ($conn->connect_error) {
+    die("Conexão falhou: " . $conn->connect_error);
+}
 
 // Função para verificar se o usuário está autenticado
 function verificarAutenticacao()
@@ -12,10 +17,8 @@ function verificarAutenticacao()
 
 verificarAutenticacao();
 
-$conn = new mysqli('localhost', 'root', '', 'axel_db');
-if ($conn->connect_error) {
-    die("Erro de conexão: " . $conn->connect_error);
-}
+
+
 
 $user_id = $_SESSION['user_id'];
 
@@ -135,6 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_id'])) {
     $sc_id = intval($_POST['sc_id']);
+    $servico_os_id = intval($_POST['servico_os_id']); // Novo campo recebido
     $observacao = trim($_POST['observacao']);
     $momento = $_POST['momento'];
     $dataAtual = date('Y-m-d H:i:s');
@@ -144,16 +148,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_id'])) {
         $imagemTmp = $_FILES['imagem']['tmp_name'];
         $imagemNome = basename($_FILES['imagem']['name']);
         $uploadDir = 'uploads/';
-        $imagemPath = $uploadDir . $imagemNome;
-
-        // Garante nome único
         $imagemNomeFinal = uniqid() . '_' . $imagemNome;
         $imagemPathFinal = $uploadDir . $imagemNomeFinal;
 
         if (move_uploaded_file($imagemTmp, $imagemPathFinal)) {
-            // Inserir no banco
-            $stmtInsert = $conn->prepare("INSERT INTO registro_os (os_id, imagem, observacao, data, momento) VALUES (?, ?, ?, ?, ?)");
-            $stmtInsert->bind_param("issss", $sc_id, $imagemNomeFinal, $observacao, $dataAtual, $momento);
+            // Inserir no banco com servico_os_id em servico_id
+            $stmtInsert = $conn->prepare("INSERT INTO registro_os (os_id, servico_id, imagem, observacao, data, momento) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmtInsert->bind_param("iissss", $sc_id, $servico_os_id, $imagemNomeFinal, $observacao, $dataAtual, $momento);
             $stmtInsert->execute();
             $stmtInsert->close();
 
@@ -166,6 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['delete_id'])) {
         echo "<script>alert('Erro no upload da imagem.');</script>";
     }
 }
+
 
 
 $conn->close();
@@ -240,6 +242,7 @@ $conn->close();
             <!-- Formulário -->
             <form method="POST" enctype="multipart/form-data"
                 class="mb-10 bg-white p-6 rounded-2xl shadow-md  w-full mx-auto space-y-5 px-4 sm:px-6 lg:px-8">
+
                 <input type="hidden" name="sc_id" value="<?= $sc_id ?>" />
 
                 <div>
@@ -253,6 +256,38 @@ $conn->close();
                     <textarea name="observacao" rows="4" required
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent max-w-[450px]"></textarea>
                 </div>
+
+                <!-- BLOCO DE SERVIÇOS ASSOCIADOS -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Serviço realizado:</label>
+                    <select name="servico_os_id" required
+                        class="w-full max-w-[450px] border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="">Selecione um serviço</option>
+                        <?php
+                        include '../../backend/db.php'; // Certifique-se de ter conexão e $sc_id definido
+
+                        $query = "SELECT * FROM servicos_os WHERE os_id = ?";
+                        $stmt = $pdo->prepare($query);
+                        $stmt->execute([$sc_id]);
+                        $servicos_os = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                        foreach ($servicos_os as $item) {
+                            $servico_id = $item['servico_id'];
+                            $value_id = $item['id'];
+
+                            $queryServico = "SELECT nome FROM servicos WHERE id = ?";
+                            $stmtServico = $pdo->prepare($queryServico);
+                            $stmtServico->execute([$servico_id]);
+                            $servico = $stmtServico->fetch(PDO::FETCH_ASSOC);
+
+                            $nome_servico = $servico ? $servico['nome'] : 'Serviço não encontrado';
+
+                            echo "<option value='{$value_id}'>{$nome_servico}</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Momento da foto:</label>

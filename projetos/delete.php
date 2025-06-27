@@ -18,8 +18,8 @@ try {
 
     $empresa_id = $usuario['empresa_id'];
 
-    // Prepara a consulta DELETE
-    $stmt = $conn->prepare("DELETE FROM projetos WHERE id=:id AND empresa_id=:empresa_id");
+    // Prepara a consulta DELETE usando PDO
+    $stmt = $pdo->prepare("DELETE FROM projetos WHERE id = :id AND empresa_id = :empresa_id");
 
     // Bind dos parâmetros
     $stmt->bindParam(':id', $id, PDO::PARAM_INT);

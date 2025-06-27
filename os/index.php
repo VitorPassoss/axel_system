@@ -146,18 +146,18 @@ $result = $stmt->get_result();
     </div>
 
     <!-- Tabela -->
-    <div class="w-[450px] sm:w-[100%]">
+    <div class="w-[350px] sm:w-[100%]">
       <div class="overflow-x-auto max-w-full rounded-lg shadow-lg bg-white  ">
 
         <?php if (!$ocultar_filtros): ?>
-          <form method="GET" class="mb-1 flex gap-2 items-center">
+          <form method="GET" class="mb-1 flex items-center">
             <!-- Filtro de Empresa -->
-            <div class="flex items-center gap-2 px-4 py-4">
+            <div class="flex items-center px-4 py-4">
               <div>
                 <i class="fas fa-building text-gray-500"></i> <!-- Ícone de empresa -->
                 <label for="empresa_id" class="text-sm font-medium text-gray-700">Empresa</label>
 
-                <select name="empresa_id" id="empresa_id" class="mt-1 block w-full p-2 mt-2 sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <select name="empresa_id" id="empresa_id" class="mt-1 block w-full p-2 mt-2 sm:w-[150px] border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                   <option value="">Todas</option>
                   <?php while ($empresa = $empresas->fetch_assoc()) { ?>
                     <option value="<?= $empresa['id'] ?>" <?= $filtro_empresa == $empresa['id'] ? 'selected' : '' ?>>
@@ -169,11 +169,11 @@ $result = $stmt->get_result();
             </div>
 
             <!-- Filtro de Obra -->
-            <div class="flex items-center gap-2">
+            <div class="flex items-center">
               <div>
                 <i class="fas fa-hammer text-gray-500"></i> <!-- Ícone de obra -->
                 <label for="obra_id" class="text-sm font-medium text-gray-700">Obra</label>
-                <select name="obra_id" id="obra_id" class="mt-1 p-2 block mt-2 w-full sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <select name="obra_id" id="obra_id" class="mt-1 p-2 block mt-2 w-full sm:w-[150px] border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                   <option value="">Todas</option>
                   <?php while ($obra = $obras->fetch_assoc()) { ?>
                     <option value="<?= $obra['id'] ?>" <?= $filtro_obra == $obra['id'] ? 'selected' : '' ?>>
@@ -184,11 +184,11 @@ $result = $stmt->get_result();
               </div>
 
               <!-- Filtro de Contrato -->
-              <div class="flex items-center gap-2 px-4 py-4">
+              <div class="flex items-center  px-4 py-4">
                 <div>
                   <i class="fas fa-file-contract text-gray-500"></i>
                   <label for="contrato_id" class="text-sm font-medium text-gray-700">Contrato</label>
-                  <select name="contrato_id" id="contrato_id" class="mt-1 block w-full p-2 mt-2 sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                  <select name="contrato_id" id="contrato_id" class="mt-1 block w-full p-2 mt-2 sm:w-[150px] border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                     <option value="">Todos</option>
                     <?php
                     $contratos = $conn->query("SELECT id, numero_contrato FROM contratos WHERE empresa_id = $empresa_id_sessao");
@@ -203,11 +203,11 @@ $result = $stmt->get_result();
               </div>
 
               <!-- Filtro de Data -->
-              <div class="flex items-center gap-2 px-4 py-4">
+              <div class="flex items-center  ">
                 <div>
                   <i class="fas fa-calendar text-gray-500"></i>
                   <label for="periodo" class="text-sm font-medium text-gray-700">Período</label>
-                  <select name="periodo" id="periodo" class="mt-1 block w-full p-2 mt-2 sm:w-56 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                  <select name="periodo" id="periodo" class="mt-1 block w-full p-2 mt-2 sm:w-[150px] border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                     <option value="">Todos</option>
                     <option value="hoje" <?= ($_GET['periodo'] ?? '') == 'hoje' ? 'selected' : '' ?>>Hoje</option>
                     <option value="mes" <?= ($_GET['periodo'] ?? '') == 'mes' ? 'selected' : '' ?>>Este Mês</option>
@@ -216,7 +216,7 @@ $result = $stmt->get_result();
               </div>
 
 
-              <div class="flex items-center py-4 ">
+              <div class="flex items-center ">
                 <button type="submit" class="flex items-center bg-black mt-7 ml-4 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50">
                   <i class="fas fa-filter mr-2"></i> <!-- Ícone de filtro -->
                   Filtrar
@@ -232,23 +232,23 @@ $result = $stmt->get_result();
         <table class=" w-full divide-y divide-gray-200">
           <thead>
             <tr class="">
-              <th class="px-6 py-3 text-left text-sm uppercase">Número</th>
-              <th class="px-6 py-3 text-left text-sm uppercase">Descrição</th>
+              <th class="px-6 py-3 text-left text-sm  border">Número</th>
+              <th class="px-6 py-3 text-left text-sm  border">Descrição</th>
 
-              <th class="px-6 py-3 text-left text-sm uppercase">Status</th>
-              <th class="px-6 py-3 text-left text-sm uppercase">Obra</th>
-              <th class="px-6 py-3 text-left text-sm uppercase">N-Contrato</th>
+              <th class="px-6 py-3 text-left text-sm  border">Status</th>
+              <th class="px-6 py-3 text-left text-sm  border">Obra</th>
+              <th class="px-6 py-3 text-left text-sm  border">N-Contrato</th>
 
-              <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
+              <th class="px-6 py-3 text-center text-sm  border">Ações</th>
 
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200">
+          <tbody class="divide-y divide-gray-200 ">
             <?php while ($row = $result->fetch_assoc()) { ?>
               <tr class="hover:bg-gray-100">
-                <td class="px-6 py-4" onclick="visualizarProjeto(<?php echo $row['id']; ?>)"><?php echo htmlspecialchars($row['id']); ?></td>
+                <td class="px-6 py-4 border" onclick="visualizarProjeto(<?php echo $row['id']; ?>)"><?php echo htmlspecialchars($row['id']); ?></td>
                 <td
-                  class="px-6 py-4 max-w-[220px] truncate"
+                  class="px-6 py-4 max-w-[220px] truncate border text-sm"
                   onclick="visualizarProjeto(<?= $row['id']; ?>)">
                   <?= htmlspecialchars($row['descricao']); ?>
                 </td>
@@ -262,20 +262,17 @@ $result = $stmt->get_result();
                   default         => 'bg-gray-100 text-gray-800',
                 };
                 ?>
-                <td class="px-6 py-4" onclick="visualizarProjeto(<?php echo $row['id']; ?>)">
+                <td class="px-6 py-4 border text-sm" onclick="visualizarProjeto(<?php echo $row['id']; ?>)">
                   <span class="px-3 py-1 rounded-full text-sm font-semibold <?= $bgColor ?>">
                     <?= $status ?>
                   </span>
                 </td>
 
-                <td class="px-6 py-4" onclick="visualizarProjeto(<?php echo $row['id']; ?>)"><?php echo htmlspecialchars($row['nome_obra']); ?></td>
-                <td class="px-6 py-4" onclick="visualizarProjeto(<?php echo $row['id']; ?>)"><?php echo htmlspecialchars($row['numero_contrato']); ?></td>
+                <td class="px-6 py-4 border text-sm" onclick="visualizarProjeto(<?php echo $row['id']; ?>)"><?php echo htmlspecialchars($row['nome_obra']); ?></td>
+                <td class="px-6 py-4 border text-sm" onclick="visualizarProjeto(<?php echo $row['id']; ?>)"><?php echo htmlspecialchars($row['numero_contrato']); ?></td>
 
-                <td class="px-6 py-4 text-center z-[9999]">
-                  <button onclick="visualizarProjeto(<?php echo $row['id']; ?>)" class=" hover:underline ml-2">
-                    <i class="fas fa-eye mr-3 text-gray-500"></i>
+                <td class="px-6 py-4 text-center z-[9999] border text-sm">
 
-                  </button>
 
                   <button onclick="compras(<?php echo $row['id']; ?>)" class=" hover:underline ml-2">
                     <i class="fas fa-shopping-cart mr-3 text-gray-500"></i>
@@ -283,12 +280,12 @@ $result = $stmt->get_result();
                   </button>
 
 
-                  <form id="delete-<?php echo $row['id']; ?>" class="inline" onsubmit="return false;">
+                  <!-- <form id="delete-<?php echo $row['id']; ?>" class="inline" onsubmit="return false;">
                     <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                     <button type="button" class="text-red-500 hover:underline ml-2" onclick="deleteContrato(<?php echo $row['id']; ?>)">
                       <i class="fas fa-trash mr-1"></i>
                     </button>
-                  </form>
+                  </form> -->
 
                 </td>
 

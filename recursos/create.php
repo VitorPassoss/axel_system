@@ -1,80 +1,94 @@
 <?php
-require_once '../backend/auth.php';
-require_once '../backend/db.php';
+session_start();
 
-header('Content-Type: application/json');
+// Verifica se a variável de sessão 'empresa_id' existe
+if (!isset($_SESSION['empresa_id'])) {
+    http_response_code(401); // Unauthorized
+    die(json_encode(["erro" => "Erro: Empresa não identificada. Acesso não autorizado."]));
+}
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'message' => 'Método inválido']);
+$empresa_id = $_SESSION['empresa_id']; // Obtém o empresa_id da sessão
+
+// Conexão com o banco de dados
+include '../backend/dbconn.php';
+
+if ($conn->connect_error) {
+    http_response_code(500); // Internal Server Error
+    die(json_encode(["erro" => "Conexão falhou: " . $conn->connect_error]));
+}
+
+// Recebe os dados JSON
+$data = json_decode(file_get_contents("php://input"), true);
+
+// Verifica se os dados obrigatórios existem
+if (!$data || !isset($data['solicitante']) || !isset($data['grau']) || !isset($data['descricao']) || !isset($data['insumos'])) {
+    http_response_code(400); // Bad Request
+    echo json_encode(["erro" => "Dados incompletos."]);
     exit;
 }
 
-try {
-    $obra_id = !empty($_POST['obra_id']) ? $_POST['obra_id'] : null;
-    $projeto_id = !empty($_POST['projeto_id']) ? $_POST['projeto_id'] : null;
-    $valor = $_POST['valor'] ?? 0;
-    $fornecedor = $_POST['fornecedor'] ?? '';
-    $status = $_POST['status'] ?? 'PENDENTE';
-    $descricao = $_POST['descricao'] ?? '';
-    $empresa_id = $usuario['empresa_id'];
+$solicitante = $conn->real_escape_string($data['solicitante']);
+$grau = $conn->real_escape_string($data['grau']);
+$descricao = $conn->real_escape_string($data['descricao']);
+// A linha que pegava o osId foi removida daqui.
 
-    $stmt = $conn->prepare("INSERT INTO solicitacao_compras (
-        obra_id, projeto_id, empresa_id, valor, fornecedor, status, descricao
-    ) VALUES (
-        :obra_id, :projeto_id, :empresa_id, :valor, :fornecedor, :status, :descricao
-    )");
+// ALTERAÇÃO 1: A query SQL agora insere NULL diretamente no campo os_id.
+$stmt = $conn->prepare("INSERT INTO solicitacao_compras (os_id, solicitante, empresa_id, valor, status, grau, descricao, criado_em) VALUES (NULL, ?, ?, 0, 'Pendente', ?, ?, NOW())");
 
-    $stmt->execute([
-        ':obra_id' => $obra_id,
-        ':projeto_id' => $projeto_id,
-        ':empresa_id' => $empresa_id,
-        ':valor' => $valor,
-        ':fornecedor' => $fornecedor,
-        ':status' => $status,
-        ':descricao' => $descricao
-    ]);
+// ALTERAÇÃO 2: O bind_param foi ajustado. Removemos o "i" (de $osId) e a variável $osId.
+$stmt->bind_param("siss", $solicitante, $empresa_id, $grau, $descricao);
 
-    $sc_id = $conn->lastInsertId();
-
-    if (!empty($_FILES['anexos']['name'][0])) {
-        salvarAnexos($conn, 'solicitacao_compras', $sc_id, $_FILES['anexos']);
-    }
-
-    echo json_encode(['success' => true, 'message' => 'Solicitação salva com sucesso.']);
-} catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Erro: ' . $e->getMessage()]);
+if (!$stmt->execute()) {
+    http_response_code(500);
+    echo json_encode(["erro" => "Erro ao criar solicitação: " . $stmt->error]);
+    exit;
 }
 
+$solicitacao_id = $stmt->insert_id;
+$stmt->close();
 
-// Função para salvar anexos
-function salvarAnexos(PDO $conn, $tabela_ref, $ref_id, $arquivos)
-{
-    $pasta_base = "uploads/$tabela_ref/$ref_id/";
-    if (!is_dir($pasta_base)) {
-        mkdir($pasta_base, 0777, true);
+// Processa os insumos (nenhuma alteração necessária nesta parte)
+foreach ($data['insumos'] as $insumo) {
+    $nome = $conn->real_escape_string($insumo['insumo_nome']);
+    $quantidade = $conn->real_escape_string($insumo['insumo_quantidade']);
+    $grau_insumo = $conn->real_escape_string($insumo['insumo_grau']);
+    $unidade = isset($insumo['insumo_unidade']) ? $conn->real_escape_string($insumo['insumo_unidade']) : '';
+
+    // Verifica se o insumo já existe
+    $checkInsumo = $conn->prepare("SELECT id FROM insumos WHERE nome = ?");
+    $checkInsumo->bind_param("s", $nome);
+    $checkInsumo->execute();
+    $checkInsumo->bind_result($insumo_id);
+    if ($checkInsumo->fetch()) {
+        // insumo_id já preenchido
+        $checkInsumo->close();
+    } else {
+        $checkInsumo->close();
+        // Cria novo insumo
+        $insertInsumo = $conn->prepare("INSERT INTO insumos (nome) VALUES (?)");
+        $insertInsumo->bind_param("s", $nome);
+        if ($insertInsumo->execute()) {
+            $insumo_id = $insertInsumo->insert_id;
+        } else {
+            echo json_encode(["erro" => "Erro ao inserir insumo: " . $insertInsumo->error]);
+            exit;
+        }
+        $insertInsumo->close();
     }
 
-    $total = count($arquivos['name']);
-    for ($i = 0; $i < $total; $i++) {
-        $nome_original = basename($arquivos['name'][$i]);
-        $tmp_name = $arquivos['tmp_name'][$i];
-        $erro = $arquivos['error'][$i];
+    // Insere item na sc_item
+    $insertItem = $conn->prepare("INSERT INTO sc_item (solicitacao_id, insumo_id, quantidade, fornecedor, grau, und_medida) VALUES (?, ?, ?, '', ?, ?)");
+    $insertItem->bind_param("iisss", $solicitacao_id, $insumo_id, $quantidade, $grau_insumo, $unidade);
 
-        if ($erro !== UPLOAD_ERR_OK || !is_uploaded_file($tmp_name)) {
-            continue;
-        }
-
-        $nome_seguro = uniqid() . "_" . preg_replace("/[^a-zA-Z0-9\.\-_]/", "_", $nome_original);
-        $caminho_final = $pasta_base . $nome_seguro;
-
-        if (move_uploaded_file($tmp_name, $caminho_final)) {
-            $stmt = $conn->prepare("INSERT INTO documentos (tabela_ref, ref_id, nome, caminho_arquivo) VALUES (:tabela_ref, :ref_id, :nome, :caminho)");
-            $stmt->execute([
-                ':tabela_ref' => $tabela_ref,
-                ':ref_id' => $ref_id,
-                ':nome' => $nome_original,
-                ':caminho' => $caminho_final
-            ]);
-        }
+    if (!$insertItem->execute()) {
+        echo json_encode(["erro" => "Erro ao inserir item da solicitação: " . $insertItem->error]);
+        exit;
     }
+
+    $insertItem->close();
 }
+
+echo json_encode(["sucesso" => true, "mensagem" => "Solicitação criada com sucesso."]);
+
+$conn->close();
+?>

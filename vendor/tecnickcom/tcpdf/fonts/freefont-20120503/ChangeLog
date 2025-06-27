@@ -6438,7 +6438,7 @@
 	  FreeSans.sfd, FreeMono.sfd,
 	  FreeSerif.sfd,
 	  FreeSerifBold.sfd: Georgian: additions and
-	  improvements. Serif now has full compliment. Note uppercase is
+	  improvements. Serif now has full compliment. Note  is
 	  questionable, being a simple scaling...
 
 2009-04-11 13:20 +0000 [r1261]  Stevan_White:
@@ -7810,7 +7810,7 @@
 2008-11-03 09:53 +0000 [r1041]  Stevan_White:
 
 	* FreeSerif.sfd: Added lowercase range to
-	  Glagolitic, as a facile scaling of the uppercase.
+	  Glagolitic, as a facile scaling of the .
 
 2008-11-03 09:50 +0000 [r1040]  Stevan_White:
 

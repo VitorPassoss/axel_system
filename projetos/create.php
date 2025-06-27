@@ -18,16 +18,17 @@ try {
     $data_fim = $_POST['data_fim'] ?? '';
     $responsavel = $_POST['responsavel'] ?? '';
     $cliente_nome = $_POST['cliente_nome'] ?? '';
-    $status = $_POST['status'];
+    $status = $_POST['status'] ?? null;
     $empresa_id = $usuario['empresa_id'];
 
-    // Insere no banco de dados
-    $stmt = $conn->prepare("INSERT INTO projetos (
+    // Prepara a query usando o objeto PDO $pdo
+    $stmt = $pdo->prepare("INSERT INTO projetos (
         nome, descricao, valor, data_inicio, data_fim, status_fk, responsavel, cliente_nome, empresa_id
     ) VALUES (
         :nome, :descricao, :valor, :data_inicio, :data_fim, :status, :responsavel, :cliente_nome, :empresa_id
     )");
 
+    // Executa a query com os valores
     $stmt->execute([
         ':nome' => $nome,
         ':descricao' => $descricao,

@@ -177,7 +177,7 @@ Numbers: Lining OldStyle Proportional SlashedZero
 Fractions: On
 VerticalPosition: Superior Inferior
 Ligatures: Common Historical
-Letters: UppercaseSmallCaps
+Letters: SmallCaps
 Variant: 1 (etc. -- must be in {} picks style set.)
 ---------------------------------------------------------------------------
 

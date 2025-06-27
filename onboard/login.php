@@ -26,13 +26,13 @@
 
       <img class="w-[140px] " src="https://i.etsystatic.com/25290379/r/il/19a886/2974258879/il_fullxfull.2974258879_pxm3.jpg" alt="">
 
-      <h2 class="text-3xl font-bold mb-8 text-center">Zion Managment </h2>
+      <h2 class="text-3xl font-bold mb-8 text-center">Zion Corporative </h2>
 
     </div>
     <div class="mb-6">
       <label class="block mb-2 text-sm font-semibold">Email</label>
       <input
-        type="email"
+        type="text"
         name="email"
         class="w-full p-3 bg-gray-200 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
         required>
