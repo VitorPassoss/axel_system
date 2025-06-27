@@ -3,12 +3,9 @@ include '../backend/auth.php';
 include '../layout/imports.php';
 
 // Conexão com o banco de dados
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../backend/dbconn.php';
 
 if ($conn->connect_error) {
   die("Conexão falhou: " . $conn->connect_error);
@@ -98,33 +95,33 @@ $result = $stmt->get_result();
       <table class="min-w-full divide-y divide-gray-200">
         <thead>
           <tr class="">
-            <th class="px-6 py-3 text-left text-sm uppercase">Nome</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Status</th>
-            <!-- <th class="px-6 py-3 text-left text-sm uppercase">Valor</th> -->
-            <th class="px-6 py-3 text-left text-sm uppercase">Início</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Responsável</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Cliente</th>
-            <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
+            <th class="px-6 py-3 text-left text-sm  border">Nome</th>
+            <th class="px-6 py-3 text-left text-sm  border">Status</th>
+            <!-- <th class="px-6 py-3 text-left text-sm ">Valor</th> -->
+            <th class="px-6 py-3 text-left text-sm  border">Início</th>
+            <th class="px-6 py-3 text-left text-sm  border">Responsável</th>
+            <th class="px-6 py-3 text-left text-sm  border">Cliente</th>
+            <th class="px-6 py-3 text-center text-sm  border">Ações</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
           <?php while ($row = $result->fetch_assoc()) { ?>
-            <tr class="hover:bg-gray-100">
+            <tr class="hover:bg-gray-100 border">
               <td class="px-6 py-4"><?php echo htmlspecialchars($row['nome']); ?></td>
-              <td class="px-6 py-4">
+              <td class="px-6 py-4 border">
                 <span style="background-color: <?= htmlspecialchars($row['status_cor']) ?>; color: black;"
                   class="px-3 py-1 rounded-full text-sm font-semibold ">
                   <?= htmlspecialchars($row['status_nome']) ?>
                 </span>
               </td>
 
-              <td class="px-6 py-4"><?php echo $row['data_inicio']; ?></td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['responsavel']); ?></td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['cliente_nome']); ?></td>
-              <td class="px-6 py-4 text-center">
+              <td class="px-6 py-4 border"><?php echo $row['data_inicio']; ?></td>
+              <td class="px-6 py-4 border"><?php echo htmlspecialchars($row['responsavel']); ?></td>
+              <td class="px-6 py-4 border"><?php echo htmlspecialchars($row['cliente_nome']); ?></td>
+              <td class="px-6 py-4 text-center border">
 
 
-                <button onclick="visualizarProjeto(<?php echo $row['id']; ?>)" class=" hover:underline ml-2">
+                <button onclick="visualizarProjeto(<?php echo $row['id']; ?>)" class=" hover:underline ml-2 ">
                   <i class="fas fa-eye mr-3 text-gray-500"></i>
 
                 </button>

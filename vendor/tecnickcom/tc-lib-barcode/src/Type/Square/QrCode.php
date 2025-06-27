@@ -63,7 +63,7 @@ class QrCode extends \Com\Tecnick\Barcode\Type\Square
     protected int $hint = 2;
 
     /**
-     * Boolean flag, if false the input string will be converted to uppercase.
+     * Boolean flag, if false the input string will be converted to .
      */
     protected bool $case_sensitive = true;
 
@@ -95,7 +95,7 @@ class QrCode extends \Com\Tecnick\Barcode\Type\Square
      *     1: LEVEL - error correction level: L, M, Q, H
      *     2: HINT - encoding mode: NL=variable, NM=numeric, AN=alphanumeric, 8B=8bit, KJ=KANJI, ST=STRUCTURED
      *     3: VERSION - integer value from 1 to 40
-     *     4: CASE SENSITIVE - if 0 the input string will be converted to uppercase
+     *     4: CASE SENSITIVE - if 0 the input string will be converted to 
      *     5: RANDOM MASK - false or number of masks to be checked
      *     6: BEST MASK - true to find the best mask (slow)
      *     7: DEFAULT MASK - mask to use when the best mask option is false

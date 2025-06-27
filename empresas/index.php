@@ -3,12 +3,9 @@ include '../backend/auth.php';
 include '../layout/imports.php';
 
 // Conexão com o banco de dados
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../backend/dbconn.php';
 
 if ($conn->connect_error) {
   die("Conexão falhou: " . $conn->connect_error);
@@ -74,22 +71,22 @@ $result = $conn->query($sql);
       <table class="min-w-full divide-y divide-gray-200">
         <thead>
           <tr class="">
-            <th class="px-6 py-3 text-left text-sm uppercase">Nome</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Cnpj</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Razao Social</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Cidade</th>
-            <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
+            <th class="px-6 py-3 text-left text-sm ">Nome</th>
+            <th class="px-6 py-3 text-left text-sm ">Cnpj</th>
+            <th class="px-6 py-3 text-left text-sm ">Razao Social</th>
+            <th class="px-6 py-3 text-left text-sm ">Cidade</th>
+            <th class="px-6 py-3 text-center text-sm ">Ações</th>
 
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
           <?php while ($row = $result->fetch_assoc()) { ?>
             <tr class="hover:bg-gray-100">
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['nome']); ?></td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['cnpj']); ?></td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['razao_social']); ?></td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['localizacao']); ?></td>
-              <td class="px-6 py-4 text-center">
+              <td class="px-6 py-4 text-sm"><?php echo htmlspecialchars($row['nome']); ?></td>
+              <td class="px-6 py-4 text-sm"><?php echo htmlspecialchars($row['cnpj']); ?></td>
+              <td class="px-6 py-4 text-sm"><?php echo htmlspecialchars($row['razao_social']); ?></td>
+              <td class="px-6 py-4 text-sm"><?php echo htmlspecialchars($row['localizacao']); ?></td>
+              <td class="px-6 py-4 text-center text-sm">
                 <button onclick="visualizarProjeto(<?php echo $row['id']; ?>)" class=" hover:underline ml-2">
                   <i class="fas fa-eye mr-3 text-gray-500"></i>
 
@@ -113,8 +110,8 @@ $result = $conn->query($sql);
 
     <!-- Modal Novo Projeto -->
     <!-- Modal Novo Projeto -->
-    <div id="modal-criar" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
-      <div class="relative bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-2xl w-11/12 md:w-2/3 lg:w-1/2 animate-fadeIn">
+    <div id="modal-criar" class="fixed inset-0  flex items-center justify-center z-[99999] hidden">
+      <div class="relative bg-white  p-8 rounded-2xl shadow-2xl w-11/12 md:w-2/3 lg:w-1/2 animate-fadeIn">
 
         <!-- Botão Fechar -->
         <button onclick="toggleModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-3xl">

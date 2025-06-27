@@ -1,6 +1,6 @@
 <?php
 require_once '../backend/auth.php';
-require_once '../backend/db.php';
+require_once '../backend/db.php'; // cria $pdo
 
 header('Content-Type: application/json');
 
@@ -18,23 +18,46 @@ try {
     $endereco_cliente = $_POST['endereco_cliente'] ?? '';
     $telefone_cliente = $_POST['telefone_cliente'] ?? '';
     $email_cliente = $_POST['email_cliente'] ?? '';
-    $valor_mensal = $_POST['valor_mensal'] ?? null;
     $valor_anual = $_POST['valor_anual'] ?? null;
     $observacoes = $_POST['observacoes'] ?? '';
     $situacao = $_POST['situacao'] ?? '';
     $dt_inicio = $_POST['dt_inicio'] ?? null;
     $dt_fim = $_POST['dt_fim'] ?? null;
+    $seguro_contrato = $_POST['seguro_contrato'] ?? '';
+    $art = $_POST['art'] ?? '';
+
+    if (!$valor_anual || !$dt_inicio || !$dt_fim) {
+        throw new Exception("Valor anual, data de início e data de fim são obrigatórios.");
+    }
+
+    // Calcular número de meses entre as datas
+    $inicio = new DateTime($dt_inicio);
+    $fim = new DateTime($dt_fim);
+    if ($fim < $inicio) {
+        throw new Exception("Data final deve ser maior que a data de início.");
+    }
+
+    $interval = $inicio->diff($fim);
+    $meses = ($interval->y * 12) + $interval->m + ($interval->d > 0 ? 1 : 0); // adiciona +1 se houver dias extras
+
+    if ($meses === 0) {
+        throw new Exception("Período entre datas é inferior a um mês.");
+    }
+
+    $valor_mensal = $valor_anual / $meses;
 
     // ID da empresa vinculada ao usuário logado
     $empresa_id = $usuario['empresa_id'];
 
-    // Insere o contrato
-    $stmt = $conn->prepare("INSERT INTO contratos (
+    // Insere o contrato usando PDO
+    $stmt = $pdo->prepare("INSERT INTO contratos (
         numero_contrato, numero_empenho, cnpj_cliente, nome_cliente, endereco_cliente,
-        telefone_cliente, email_cliente, valor_mensal, valor_anual, observacoes, empresa_id, situacao, dt_inicio, dt_fim
+        telefone_cliente, email_cliente, valor_mensal, valor_anual, observacoes,
+        empresa_id, situacao, dt_inicio, dt_fim, seguro_contrato, art
     ) VALUES (
         :numero_contrato, :numero_empenho, :cnpj_cliente, :nome_cliente, :endereco_cliente,
-        :telefone_cliente, :email_cliente, :valor_mensal, :valor_anual, :observacoes, :empresa_id, :situacao, :dt_inicio, :dt_fim
+        :telefone_cliente, :email_cliente, :valor_mensal, :valor_anual, :observacoes,
+        :empresa_id, :situacao, :dt_inicio, :dt_fim, :seguro_contrato, :art
     )");
 
     $stmt->execute([
@@ -52,14 +75,15 @@ try {
         ':situacao' => $situacao,
         ':dt_inicio' => $dt_inicio,
         ':dt_fim' => $dt_fim,
-
+        ':seguro_contrato' => $seguro_contrato,
+        ':art' => $art
     ]);
 
-    $contrato_id = $conn->lastInsertId(); // pega o ID do contrato recém inserido
+    $contrato_id = $pdo->lastInsertId(); // pega o ID do contrato recém inserido
 
     // Salva os arquivos anexos
     if (!empty($_FILES['anexos']['name'][0])) {
-        salvarAnexos($conn, 'contratos', $contrato_id, $_FILES['anexos']);
+        salvarAnexos($pdo, 'contratos', $contrato_id, $_FILES['anexos']);
     }
 
     echo json_encode(['success' => true, 'message' => 'Contrato salvo com sucesso.']);
@@ -67,9 +91,8 @@ try {
     echo json_encode(['success' => false, 'message' => 'Erro: ' . $e->getMessage()]);
 }
 
-
 // Função para salvar anexos
-function salvarAnexos(PDO $conn, $tabela_ref, $ref_id, $arquivos)
+function salvarAnexos(PDO $pdo, $tabela_ref, $ref_id, $arquivos)
 {
     $pasta_base = "uploads/$tabela_ref/$ref_id/";
     if (!is_dir($pasta_base)) {
@@ -90,7 +113,7 @@ function salvarAnexos(PDO $conn, $tabela_ref, $ref_id, $arquivos)
         $caminho_final = $pasta_base . $nome_seguro;
 
         if (move_uploaded_file($tmp_name, $caminho_final)) {
-            $stmt = $conn->prepare("INSERT INTO documentos (tabela_ref, ref_id, nome, caminho_arquivo) VALUES (:tabela_ref, :ref_id, :nome, :caminho)");
+            $stmt = $pdo->prepare("INSERT INTO documentos (tabela_ref, ref_id, nome, caminho_arquivo) VALUES (:tabela_ref, :ref_id, :nome, :caminho)");
             $stmt->execute([
                 ':tabela_ref' => $tabela_ref,
                 ':ref_id' => $ref_id,

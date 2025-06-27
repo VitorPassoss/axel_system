@@ -9,12 +9,9 @@ if (!isset($_SESSION['empresa_id'])) {
 $empresa_id = $_SESSION['empresa_id']; // Obtém o empresa_id da sessão
 
 // Conexão com o banco de dados
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../backend/dbconn.php';
 
 if ($conn->connect_error) {
     die("Conexão falhou: " . $conn->connect_error);
@@ -72,9 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($conn->query($sql) === TRUE) {
         $os_id = $conn->insert_id; // Pega o ID da OS recém-criada
 
+
+
         // Criar conexão PDO
-        $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        include '../backend/db.php';
+
 
         // Salvar serviços (espera um array JSON no campo oculto 'servicos')
         if (!empty($_POST['servicos'])) {
@@ -119,8 +118,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':quantidade' => $servico['quantidade'],
                         ':tipo_servico' => $servico['tipo'] ?? null,
                         ':executor' => $servico['executor'] ?? null,
-                        ':dt_inicio' => $servico['data_inicio'] ?? null,
-                        ':dt_final' => $servico['data_final'] ?? null,
+                        ':dt_inicio' => $servico['dt_inicio'] ?? null,
+                        ':dt_final' => $servico['dt_final'] ?? null,
                     ]);
                 }
             }

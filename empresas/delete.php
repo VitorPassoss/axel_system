@@ -1,12 +1,9 @@
 <?php
 header('Content-Type: application/json');
 
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../backend/dbconn.php';
 
 if ($conn->connect_error) {
     echo json_encode(['success' => false, 'message' => 'Erro de conexão com o banco de dados.']);

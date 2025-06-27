@@ -6,6 +6,13 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'setasign\\Fpdi\\' => array($vendorDir . '/setasign/fpdi/src'),
+    'Psr\\Log\\' => array($vendorDir . '/psr/log/src'),
+    'Psr\\Http\\Message\\' => array($vendorDir . '/psr/http-message/src'),
+    'Mpdf\\PsrLogAwareTrait\\' => array($vendorDir . '/mpdf/psr-log-aware-trait/src'),
+    'Mpdf\\PsrHttpMessageShim\\' => array($vendorDir . '/mpdf/psr-http-message-shim/src'),
+    'Mpdf\\' => array($vendorDir . '/mpdf/mpdf/src'),
+    'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
     'Com\\Tecnick\\Unicode\\Data\\' => array($vendorDir . '/tecnickcom/tc-lib-unicode-data/src'),
     'Com\\Tecnick\\Unicode\\' => array($vendorDir . '/tecnickcom/tc-lib-unicode/src'),
     'Com\\Tecnick\\Pdf\\Page\\' => array($vendorDir . '/tecnickcom/tc-lib-pdf-page/src'),

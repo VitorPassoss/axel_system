@@ -4,10 +4,7 @@ require_once '../backend/auth.php';
 header('Content-Type: application/json');
 
 // Configuração da conexão com o banco de dados usando PDO
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
+
 
 try {
     // Conexão com o banco usando PDO

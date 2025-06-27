@@ -2,15 +2,9 @@
 session_start();
 
 
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
-if ($conn->connect_error) {
-    die("Conexão falhou: " . $conn->connect_error);
-}
+
+include '../backend/db.php';
 
 // Função para salvar os anexos
 function salvarAnexos($conn, $tabela_ref, $ref_id, $arquivos) {

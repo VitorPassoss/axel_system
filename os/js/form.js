@@ -81,6 +81,7 @@ function adicionarServicoAoDOM(servico) {
             <p class="text-sm text-gray-600">Quantidade: ${servico.quantidade}</p>
             <p class="text-sm text-gray-600">Tipo: ${servico.tipo}</p>
             <p class="text-sm text-gray-600">Executor: ${servico.executor}</p>
+            <p class="text-sm text-gray-600">Data Inicio: ${servico.dt_inicio}</p>
         </div>
         <button class="text-red-500 hover:text-red-700" onclick="removerServico(this)">Remover</button>
     `;
@@ -121,7 +122,10 @@ document.getElementById("formAdicionarServico").addEventListener("submit", funct
         tipo: document.getElementById("tipo_servico").value,
         executor: document.getElementById("executor").value,
         servicoId: servicoDataSet.servicoId || null,
-        categoria: servicoDataSet.categoria || null
+        categoria: servicoDataSet.categoria || null,
+        dt_inicio: document.getElementById("dt_inicio").value,
+        dt_final: document.getElementById("dt_final").value,
+
     };
 
     adicionarServicoAoDOM(servico);

@@ -3,12 +3,9 @@ include '../backend/auth.php';
 include '../layout/imports.php';
 
 // Conexão com o banco de dados
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../backend/dbconn.php';
 
 if ($conn->connect_error) {
     die("Conexão falhou: " . $conn->connect_error);
@@ -109,28 +106,28 @@ if (isset($_GET['contrato_id'])) {
                     </div>
 
                     <div class="flex flex-col">
-                        <label for="cnpj_cliente" class="text-gray-700 mb-1 text-sm font-medium">CNPJ do Cliente</label>
+                        <label for="cnpj_cliente" class="text-gray-700 mb-1 text-sm font-medium">CNPJ do Contratante</label>
                         <input type="text" id="cnpj_cliente" name="cnpj_cliente" required
                             value="<?= htmlspecialchars($contrato['cnpj_cliente'] ?? '') ?>"
                             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
                     </div>
 
                     <div class="flex flex-col">
-                        <label for="nome_cliente" class="text-gray-700 mb-1 text-sm font-medium">Nome do Cliente</label>
+                        <label for="nome_cliente" class="text-gray-700 mb-1 text-sm font-medium">Nome do Contratante</label>
                         <input type="text" id="nome_cliente" name="nome_cliente" required
                             value="<?= htmlspecialchars($contrato['nome_cliente'] ?? '') ?>"
                             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
                     </div>
 
                     <div class="flex flex-col">
-                        <label for="endereco_cliente" class="text-gray-700 mb-1 text-sm font-medium">Endereço do Cliente</label>
+                        <label for="endereco_cliente" class="text-gray-700 mb-1 text-sm font-medium">Endereço do Contratante</label>
                         <input type="text" id="endereco_cliente" name="endereco_cliente"
                             value="<?= htmlspecialchars($contrato['endereco_cliente'] ?? '') ?>"
                             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
                     </div>
 
                     <div class="flex flex-col">
-                        <label for="telefone_cliente" class="text-gray-700 mb-1 text-sm font-medium">Telefone do Cliente</label>
+                        <label for="telefone_cliente" class="text-gray-700 mb-1 text-sm font-medium">Telefone do Contratante</label>
                         <input type="text" id="telefone_cliente" name="telefone_cliente"
                             value="<?= htmlspecialchars($contrato['telefone_cliente'] ?? '') ?>"
                             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
@@ -140,24 +137,21 @@ if (isset($_GET['contrato_id'])) {
 
 
                     <div class="flex flex-col">
-                        <label for="email_cliente" class="text-gray-700 mb-1 text-sm font-medium">Email do Cliente</label>
+                        <label for="email_cliente" class="text-gray-700 mb-1 text-sm font-medium">Email do Contratante</label>
                         <input type="email" id="email_cliente" name="email_cliente"
                             value="<?= htmlspecialchars($contrato['email_cliente'] ?? '') ?>"
                             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
                     </div>
 
-                    <div class="flex flex-col">
-                        <label for="valor_mensal" class="text-gray-700 mb-1 text-sm font-medium">Valor Mensal</label>
-                        <input type="number" step="0.01" id="valor_mensal" name="valor_mensal"
-                            value="<?= htmlspecialchars($contrato['valor_mensal'] ?? '') ?>"
-                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
-                    </div>
 
-                    <div class="flex flex-col">
-                        <label for="valor_anual" class="text-gray-700 mb-1 text-sm font-medium">Valor Anual</label>
-                        <input type="number" step="0.01" id="valor_anual" name="valor_anual"
-                            value="<?= htmlspecialchars($contrato['valor_anual'] ?? '') ?>"
-                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
+
+                    <div class="flex flex-col ">
+                        <label for="valor_anual_formatado" class="text-gray-700 mb-1 text-sm font-medium">Valor Total</label>
+                        <input type="text" id="valor_anual_formatado"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100"
+                            value="<?= number_format($contrato['valor_anual'] ?? 0, 2, ',', '.') ?>" placeholder="0,00" />
+                        <input type="hidden" name="valor_anual" id="valor_anual_real"
+                            value="<?= htmlspecialchars($contrato['valor_anual'] ?? '') ?>" />
                     </div>
 
                     <div class="flex flex-col">
@@ -170,6 +164,21 @@ if (isset($_GET['contrato_id'])) {
 
                         </select>
                     </div>
+
+                    <div class="flex flex-col">
+                        <label for="seguro_contrato " class="text-gray-700 mb-1 text-sm font-medium">Seguro do Contrato</label>
+                        <input type="text" " id=" seguro_contrato " name=" seguro_contrato "
+                            value=" <?= htmlspecialchars($contrato['seguro_contrato '] ?? '') ?>"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label for="art " class="text-gray-700 mb-1 text-sm font-medium">Anotação de Responsabilidade Técnica (art)</label>
+                        <input type="text" " id=" art" name="art"
+                            value="<?= htmlspecialchars($contrato['art'] ?? '') ?>"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
+                    </div>
+
 
                     <div class="flex flex-col">
                         <label for="dt_inicio" class="text-gray-700 mb-1 text-sm font-medium">Data de Início</label>
@@ -185,7 +194,7 @@ if (isset($_GET['contrato_id'])) {
                             class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 text-gray-800 dark:text-gray-100" />
                     </div>
 
-                    <input type="file" id="anexos" name="anexos[]" multiple />
+                    <input class="flex flex-col " type="file" id="anexos" name="anexos[]" multiple />
 
 
 
@@ -206,6 +215,38 @@ if (isset($_GET['contrato_id'])) {
             </form>
         </div>
     </div>
+
+
+    <script>
+        function aplicarMascaraFinanceira(campoVisivelId, campoRealId) {
+            const campoVisivel = document.getElementById(campoVisivelId);
+            const campoReal = document.getElementById(campoRealId);
+
+            campoVisivel.addEventListener('input', function() {
+                let valor = campoVisivel.value.replace(/\D/g, '');
+
+                if (!valor) {
+                    campoVisivel.value = '';
+                    campoReal.value = '';
+                    return;
+                }
+
+                valor = (parseFloat(valor) / 100).toFixed(2);
+
+                campoReal.value = valor; // Enviado ao backend (com ponto)
+
+                campoVisivel.value = formatarValorParaUsuario(valor); // Visível ao usuário
+            });
+
+            function formatarValorParaUsuario(valor) {
+                return valor
+                    .replace('.', ',')
+                    .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+        }
+
+        aplicarMascaraFinanceira('valor_anual_formatado', 'valor_anual_real');
+    </script>
 
 
     <script>

@@ -3,12 +3,9 @@ include '../backend/auth.php';
 include '../layout/imports.php';
 
 // Conexão com o banco de dados
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../backend/dbconn.php';
 
 if ($conn->connect_error) {
     die("Conexão falhou: " . $conn->connect_error);
@@ -18,6 +15,7 @@ $empresa_id = $_SESSION['empresa_id'];
 $os = null;
 $obra = null;
 $contrato = null;
+$usuario = $GLOBALS['usuario'];
 
 if (isset($_GET['sc_id'])) {
     $sc_id = intval($_GET['sc_id']);
@@ -169,32 +167,39 @@ while ($row = $resultServicos->fetch_assoc()) {
 
 
 
-
-            <header class="bg-white rounded-2xl shadow-lg p-6 mb-10 flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <button onclick="window.location.href='../os'" class="text-gray-600 hover:text-primary transition">
+            <header class="bg-white rounded-2xl shadow-lg p-6 mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <!-- Título e botão voltar -->
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <button onclick="window.location.href='../os'" class="text-gray-600 hover:text-primary transition self-start sm:self-auto">
                         <i class="fas fa-arrow-left text-xl"></i>
                     </button>
-                    <h1 class="text-2xl font-semibold text-gray-800">Detalhes da O.S - N <?= htmlspecialchars($os['id']) ?></h1>
-
+                    <h1 class="text-xl sm:text-2xl font-semibold text-gray-800">
+                        Detalhes da O.S - N <?= htmlspecialchars($os['id']) ?>
+                    </h1>
                 </div>
-                <div class="flex gap-3">
-                    <button onclick="window.location.href='./relatorio_fotografico?sc_id=<?php echo htmlspecialchars($os['id']); ?>'"" class=" bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center gap-2">
-                        <i class="fas fa-camera-retro"></i> <!-- Ícone de câmera -->
-                        Levantamento
+
+                <!-- Botões de ações -->
+                <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    <button
+                        onclick="window.location.href='./relatorio_fotografico?sc_id=<?php echo htmlspecialchars($os['id']); ?>'"
+                        class="bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center justify-center gap-2">
+                        <i class="fas fa-camera-retro"></i>
+                        Registro Fotográfico
                     </button>
-                    <button onclick="window.location.href='./sc_compra?sc_id=<?php echo htmlspecialchars($os['id']); ?>'" class="bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center gap-2">
-                        <i class="fas fa-cart-plus"></i> <!-- Ícone de carrinho de compras -->
+
+                    <button
+                        onclick="window.location.href='./sc_compra?sc_id=<?php echo htmlspecialchars($os['id']); ?>'"
+                        class="bg-blue-800 text-white px-5 py-2.5 rounded-xl shadow hover:bg-blue-700 transition duration-200 flex items-center justify-center gap-2">
+                        <i class="fas fa-cart-plus"></i>
                         Solicitar Compra
                     </button>
-
                 </div>
-
             </header>
 
 
+
             <!-- Formulário -->
-            <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            <form method="POST" enctype="multipart/form-data" class="space-y-6 mt-6 bg-white px-8 py-10 rounded shadow">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <?php if (isset($os['id'])): ?>
                         <input id="osId" type="hidden" name="id" value="<?= htmlspecialchars($os['id']) ?>">
@@ -303,7 +308,11 @@ while ($row = $resultServicos->fetch_assoc()) {
 
                     <p class="text-sm text-gray-700 mb-4"><strong>Responsável Técnico:</strong> <?php echo $obra['responsavel_tecnico']; ?></p>
 
-                    <a href="../Obras/detalhes.php?obra_id=<?php echo $obra['id']; ?>" class="inline-block bg-[#171717] text-white py-2 px-4 rounded-lg text-center hover:bg-blue-600 transition-colors duration-200">Ver mais detalhes</a>
+                    <?php if ($usuario['setor_nome'] == 'contratante'): ?>
+                        <a href="../Obras/detalhes.php?obra_id=<?php echo $obra['id']; ?>" class="inline-block bg-[#171717] text-white py-2 px-4 rounded-lg text-center hover:bg-blue-600 transition-colors duration-200">Ver mais detalhes</a>
+
+                    <?php endif; ?>
+
                 </div>
 
                 <script>
@@ -354,23 +363,23 @@ while ($row = $resultServicos->fetch_assoc()) {
                     <table class="w-full table-auto border-collapse rounded-lg overflow-hidden">
                         <thead class="bg-[#F3F5F7] text-left">
                             <tr>
-                                <th class="p-3">Nome</th>
-                                <th class="p-3">Unidade</th>
-                                <th class="p-3">Quantidade</th>
-                                <th class="p-3">Tipo</th>
-                                <th class="p-3">Executor</th>
-                                <th class="p-3">Ação</th>
+                                <th class="p-3 border">Nome</th>
+                                <th class="p-3 border">Unidade</th>
+                                <th class="p-3 border">Quantidade</th>
+                                <th class="p-3 border">Tipo</th>
+                                <th class="p-3 border">Executor</th>
+                                <th class="p-3 border">Ação</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <?php foreach ($servicos as $servico): ?>
                                 <tr class="servicoItem" data-servico-id="<?= $servico['id'] ?>">
-                                    <td class="p-3 font-semibold"><?= htmlspecialchars($servico['nome']) ?></td>
-                                    <td class="p-3"><?= htmlspecialchars($servico['und_do_servico']) ?></td>
-                                    <td class="p-3"><?= htmlspecialchars($servico['quantidade']) ?></td>
-                                    <td class="p-3"><?= htmlspecialchars($servico['tipo_servico']) ?></td>
-                                    <td class="p-3"><?= htmlspecialchars($servico['executor']) ?></td>
-                                    <td class="p-3">
+                                    <td class="p-3 font-semibold border"><?= htmlspecialchars($servico['nome']) ?></td>
+                                    <td class="p-3 border"><?= htmlspecialchars($servico['und_do_servico']) ?></td>
+                                    <td class="p-3 border"><?= htmlspecialchars($servico['quantidade']) ?></td>
+                                    <td class="p-3 border"><?= htmlspecialchars($servico['tipo_servico']) ?></td>
+                                    <td class="p-3 border"><?= htmlspecialchars($servico['executor']) ?></td>
+                                    <td class="p-3 border">
                                         <button class="text-red-500 hover:text-red-700 removeServicoBtn">Remover</button>
                                     </td>
                                 </tr>
@@ -458,7 +467,7 @@ while ($row = $resultServicos->fetch_assoc()) {
                             <label for="tipo_servico" class="block text-sm font-medium text-gray-700">Tipo de Serviço</label>
                             <select id="tipo_servico" name="tipo_servico" class="block w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
                                 <option value="preventiva">Preventiva</option>
-                                <option value="corretiva">Manutenção</option>
+                                <option value="corretiva">Corretiva</option>
                             </select>
                         </div>
 
@@ -532,14 +541,14 @@ while ($row = $resultServicos->fetch_assoc()) {
                         <div class="text-sm text-blue-800 font-semibold">Total de Solicitações</div>
                         <div class="text-2xl text-blue-900 font-bold"><?= $totalSolicitacoes ?></div>
                     </div>
-                    <div class="bg-green-50 border border-green-200 p-4 rounded-lg text-center">
+                    <!-- <div class="bg-green-50 border border-green-200 p-4 rounded-lg text-center">
                         <div class="text-sm text-green-800 font-semibold">Valor Total Solicitado</div>
                         <div class="text-2xl text-green-900 font-bold"><?= $totalInsumos ?></div>
-                    </div>
-                    <div class="bg-purple-50 border border-purple-200 p-4 rounded-lg text-center">
+                    </div> -->
+                    <!-- <div class="bg-purple-50 border border-purple-200 p-4 rounded-lg text-center">
                         <div class="text-sm text-purple-800 font-semibold">Valor Total Aprovado</div>
                         <div class="text-2xl text-purple-900 font-bold"><?= $quantidadeTotal ?></div>
-                    </div>
+                    </div> -->
                 </div>
                 <?php if (!empty($solicitacoes)): ?>
                     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -576,9 +585,25 @@ while ($row = $resultServicos->fetch_assoc()) {
                                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                         <div>
                                                             <div class="mb-1">
-                                                                <span class="font-semibold text-gray-500">ID:</span>
-                                                                <span class="ml-1"><?= htmlspecialchars($item['id']) ?></span>
+                                                                <span class="font-semibold text-gray-500">Insumo:</span>
+                                                                <span class="ml-1">
+                                                                    <?php
+                                                                    $insumoNome = 'Desconhecido';
+                                                                    if (!empty($item['insumo_id'])) {
+                                                                        $stmtInsumo = $conn->prepare("SELECT nome FROM insumos WHERE id = ?");
+                                                                        $stmtInsumo->bind_param("i", $item['insumo_id']);
+                                                                        $stmtInsumo->execute();
+                                                                        $resInsumo = $stmtInsumo->get_result();
+                                                                        if ($rowInsumo = $resInsumo->fetch_assoc()) {
+                                                                            $insumoNome = $rowInsumo['nome'];
+                                                                        }
+                                                                        $stmtInsumo->close();
+                                                                    }
+                                                                    echo htmlspecialchars($insumoNome);
+                                                                    ?>
+                                                                </span>
                                                             </div>
+
                                                             <div class="mb-1">
                                                                 <span class="font-semibold text-gray-500">Insumo ID:</span>
                                                                 <span class="ml-1"><?= htmlspecialchars($item['insumo_id']) ?></span>

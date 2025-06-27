@@ -1,9 +1,6 @@
 <?php
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../backend/dbconn.php';
 if ($conn->connect_error) {
     die(json_encode(['success' => false, 'message' => 'Erro na conexão com o banco.']));
 }

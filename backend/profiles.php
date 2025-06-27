@@ -7,10 +7,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Conectar ao banco de dados
-$conn = new mysqli('localhost', 'root', '', 'axel_db');
+include '../backend/dbconn.php';
+
 if ($conn->connect_error) {
-    echo json_encode(['error' => 'Erro na conexão com o banco de dados']);
-    exit;
+  die("Conexão falhou: " . $conn->connect_error);
 }
 
 $user_id = $_SESSION['user_id'];

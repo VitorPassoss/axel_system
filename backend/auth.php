@@ -1,5 +1,6 @@
 <?php
 session_start();
+include(__DIR__ . '/dbconn.php');
 
 // Função para verificar se o usuário está autenticado
 function verificarAutenticacao()
@@ -14,7 +15,8 @@ function verificarAutenticacao()
 verificarAutenticacao();
 
 // Conexão com o banco
-$conn = new mysqli('localhost', 'root', '', 'axel_db');
+
+
 if ($conn->connect_error) {
     die("Erro de conexão: " . $conn->connect_error);
 }
@@ -46,10 +48,9 @@ if ($result->num_rows === 0) {
 
 
 $usuario = $result->fetch_assoc();
+$GLOBALS['usuario'] = $usuario;
 
 $_SESSION['empresa_id'] = $usuario['empresa_id'];
 
 $stmt->close();
 $conn->close();
-
-

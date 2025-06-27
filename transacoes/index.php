@@ -1,37 +1,38 @@
 <?php
 include '../backend/auth.php';
-
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
-
-$conn = new mysqli($host, $username, $password, $dbname);
+include '../backend/dbconn.php';
+include '../layout/imports.php';
 
 if ($conn->connect_error) {
   die("Conexão falhou: " . $conn->connect_error);
 }
 
-include '../layout/imports.php';
+// Filtros
+$filtro_empresa_id = isset($_GET['empresa_id']) ? intval($_GET['empresa_id']) : $_SESSION['empresa_id'];
+$filtro_mes = isset($_GET['mes']) ? intval($_GET['mes']) : date('n');
+$filtro_ano = isset($_GET['ano']) ? intval($_GET['ano']) : date('Y');
 
-$empresa_id = $_SESSION['empresa_id'];
-
-// Ajustando a consulta para ordenar por "criado_em" (mais recente para mais antigo)
 $sql = "SELECT t.*, b.nome AS banco, c.nome AS categoria
         FROM transacoes t
         LEFT JOIN bancos b ON t.banco_id = b.id
         LEFT JOIN categorias c ON t.categoria_id = c.id
-        WHERE t.empresa_id = ? AND tipo_transacao = 'entrada'
+        WHERE t.empresa_id = ?
+          AND tipo_transacao = 'entrada'
+          AND MONTH(t.criado_em) = ?
+          AND YEAR(t.criado_em) = ?
         ORDER BY t.criado_em DESC";
 
-
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $empresa_id);
+$stmt->bind_param("iii", $filtro_empresa_id, $filtro_mes, $filtro_ano);
 $stmt->execute();
 $result = $stmt->get_result();
 
+// Pré-carregar os dados auxiliares em arrays
+$empresas = $conn->query("SELECT id, nome FROM empresas");
 $bancos = $conn->query("SELECT id, nome FROM bancos");
 $categorias = $conn->query("SELECT id, nome FROM categorias");
+$setores = $conn->query("SELECT id, nome FROM setores");
+
 ?>
 
 
@@ -48,7 +49,7 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
       theme: {
         extend: {
           colors: {
-            primary: '#171717', // blue-500
+            primary: '#1B1E26', // blue-500
           }
         }
       }
@@ -57,14 +58,14 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
 </head>
 
 <div id="modal-criar" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
-  <div class="relative bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-2xl w-11/12 md:w-2/3 lg:w-1/2 animate-fadeIn">
+  <div class="relative   p-8 rounded-2xl shadow-2xl w-11/12 md:w-2/3 lg:w-1/2 animate-fadeIn bg-white">
 
     <!-- Botão Fechar -->
     <button onclick="toggleModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-3xl">
       &times;
     </button>
 
-    <h2 class="text-3xl font-bold text-gray-800 dark:text-black mb-6 text-center">Nova Transação</h2>
+    <h2 class="text-3xl font-bold text-gray-800  mb-6 text-center">Nova Transação</h2>
 
     <!-- Formulário -->
     <form id="form-transacao" class="space-y-6">
@@ -75,18 +76,6 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
           <input type="text" name="descricao" required class="rounded-lg p-3 border border-gray-300" />
         </div>
 
-
-
-        <div class="flex flex-col">
-          <label class="text-sm font-medium mb-1 text-gray-700">Status</label>
-          <select name="status" class="rounded-lg p-3 border border-gray-300">
-            <option value="pendente">Pendente</option>
-            <option value="paga">Paga</option>
-            <option value="cancelada">Cancelada</option>
-            <option value="a vencer">A Vencer</option>
-            <option value="em atraso">Em Atraso</option>
-          </select>
-        </div>
 
         <div class="flex flex-col">
           <label class="text-sm font-medium mb-1 text-gray-700">Valor</label>
@@ -103,15 +92,7 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
           </select>
         </div>
 
-        <!-- Categoria -->
-        <div class="flex flex-col">
-          <label class="text-sm font-medium mb-1 text-gray-700">Categoria</label>
-          <select name="categoria_id" id="select-categoria" class="rounded-lg p-3 border border-gray-300">
-            <?php while ($categoria = $categorias->fetch_assoc()) : ?>
-              <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nome']) ?></option>
-            <?php endwhile; ?>
-          </select>
-        </div>
+
 
       </div>
 
@@ -139,54 +120,64 @@ $categorias = $conn->query("SELECT id, nome FROM categorias");
         + Nova Entrada
       </button>
     </div>
+    <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+      <!-- Empresa -->
+      <div class="flex flex-col">
+        <label class="text-sm font-medium text-gray-600 mb-1">Empresa</label>
+        <select name="empresa_id" class="h-10 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <?php foreach ($empresas as $empresa): ?>
+            <option value="<?= $empresa['id'] ?>" <?= $empresa['id'] == $filtro_empresa_id ? 'selected' : '' ?>>
+              <?= htmlspecialchars($empresa['nome']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+
+      <!-- Mês -->
+      <div class="flex flex-col">
+        <label class="text-sm font-medium text-gray-600 mb-1">Mês</label>
+        <select name="mes" class="h-10 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <?php for ($m = 1; $m <= 12; $m++): ?>
+            <option value="<?= $m ?>" <?= $m == $filtro_mes ? 'selected' : '' ?>>
+              <?= str_pad($m, 2, '0', STR_PAD_LEFT) ?>
+            </option>
+          <?php endfor; ?>
+        </select>
+      </div>
+
+      <!-- Ano -->
+      <div class="flex flex-col">
+        <label class="text-sm font-medium text-gray-600 mb-1">Ano</label>
+        <input type="number" name="ano" value="<?= $filtro_ano ?>" min="2000" max="<?= date('Y') ?>"
+          class="h-10 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+
+      <!-- Botão -->
+      <div class="flex items-end">
+        <button type="submit"
+          class="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition duration-150">
+          Filtrar
+        </button>
+      </div>
+    </form>
 
     <!-- Tabela -->
     <div class="overflow-x-auto rounded-lg shadow-lg bg-white">
       <table class="min-w-full divide-y divide-gray-200">
         <thead>
           <tr>
-            <th class="px-6 py-3 text-left text-sm uppercase">Descrição</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Status</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Valor</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Categoria</th>
-            <th class="px-6 py-3 text-left text-sm uppercase">Data</th>
+            <th class="px-6 py-3 text-left text-sm ">Valor</th>
+            <th class="px-6 py-3 text-left text-sm ">Data</th>
 
-            <th class="px-6 py-3 text-center text-sm uppercase">Ações</th>
+            <th class="px-6 py-3 text-center text-sm ">Ações</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
           <?php while ($row = $result->fetch_assoc()) : ?>
             <tr class="hover:bg-gray-100">
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['descricao']); ?></td>
-          
-              <td class="px-6 py-4">
-                <?php
-                // Status (Pendente, Paga, Cancelada, A Vencer, Em Atraso)
-                switch ($row['status']) {
-                  case 'pendente':
-                    $statusClasse = 'bg-yellow-100 text-yellow-800';
-                    break;
-                  case 'paga':
-                    $statusClasse = 'bg-green-100 text-green-800';
-                    break;
-                  case 'cancelada':
-                    $statusClasse = 'bg-gray-100 text-gray-800';
-                    break;
-                  case 'a vencer':
-                    $statusClasse = 'bg-blue-100 text-blue-800';
-                    break;
-                  case 'em atraso':
-                    $statusClasse = 'bg-red-100 text-red-800';
-                    break;
-                  default:
-                    $statusClasse = 'bg-gray-100 text-gray-800';
-                    break;
-                }
-                echo "<span class='inline-block px-3 py-1 rounded-full text-xs font-semibold $statusClasse'>" . htmlspecialchars($row['status']) . "</span>";
-                ?>
-              </td>
+
+
               <td class="px-6 py-4">R$ <?php echo number_format($row['valor'], 2, ',', '.'); ?></td>
-              <td class="px-6 py-4"><?php echo htmlspecialchars($row['categoria']); ?></td>
               <td class="px-6 py-4">
                 <?php
                 // Converte a data e hora para o formato brasileiro

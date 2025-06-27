@@ -1,11 +1,8 @@
 <?php
 // Conexão com o banco de dados
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
 
-$conn = new mysqli($host, $username, $password, $dbname);
+
+include '../backend/dbconn.php';
 if ($conn->connect_error) {
   die(json_encode(['sucesso' => false, 'mensagem' => 'Conexão falhou.']));
 }

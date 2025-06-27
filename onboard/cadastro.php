@@ -1,10 +1,9 @@
 <?php
 // conexão com o banco
-$conn = new mysqli('localhost', 'root', '', 'axel_db');
+include '../backend/dbconn.php';
 
-// verificar conexão
 if ($conn->connect_error) {
-  die("Falha na conexão: " . $conn->connect_error);
+  die("Conexão falhou: " . $conn->connect_error);
 }
 
 // Buscar setores
@@ -57,7 +56,7 @@ $conn->close();
     <div class="mb-6">
       <label class="block mb-2 text-sm font-semibold">Email</label>
       <input
-        type="email"
+        type="text"
         name="email"
         class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
         required>

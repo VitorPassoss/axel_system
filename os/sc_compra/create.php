@@ -1,95 +1,127 @@
 <?php
 session_start();
+include '../../backend/dbconn.php';
 
-// Verifica se a variável de sessão 'empresa_id' existe
+// Define o cabeçalho como JSON para todas as respostas
+header('Content-Type: application/json');
+
+// Verifica a sessão da empresa
 if (!isset($_SESSION['empresa_id'])) {
-    die("Erro: Empresa não identificada.");
+    http_response_code(401); // Unauthorized
+    echo json_encode(["success" => false, "error" => "Empresa não identificada. Faça login novamente."]);
+    exit;
 }
 
-$empresa_id = $_SESSION['empresa_id']; // Obtém o empresa_id da sessão
-
-// Conexão com o banco de dados
-$host = 'localhost';
-$dbname = 'axel_db';
-$username = 'root';
-$password = '';
-
-$conn = new mysqli($host, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    die("Conexão falhou: " . $conn->connect_error);
+// Garante que a requisição seja do tipo POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405); // Method Not Allowed
+    echo json_encode(['success' => false, 'error' => 'Método inválido.']);
+    exit;
 }
 
-// Recebe os dados JSON
+$empresa_id = $_SESSION['empresa_id'];
+
+// Recebe e decodifica os dados JSON enviados pelo JavaScript
 $data = json_decode(file_get_contents("php://input"), true);
 
-// Verifica se os dados obrigatórios existem
-if (!$data || !isset($data['solicitante']) || !isset($data['grau']) || !isset($data['descricao']) || !isset($data['insumos'])) {
-    http_response_code(400);
-    echo json_encode(["erro" => "Dados incompletos."]);
+// --- MUDANÇA 1: Validação adaptada para a nova estrutura de dados ---
+if (
+    !$data || 
+    !isset($data['solicitante']) || 
+    !isset($data['descricao']) || 
+    !isset($data['itens']) || // Espera 'itens', não 'insumos'
+    !is_array($data['itens']) || 
+    empty($data['itens'])
+) {
+    http_response_code(400); // Bad Request
+    echo json_encode(["success" => false, "error" => "Dados incompletos ou malformados."]);
     exit;
 }
 
-$solicitante = $conn->real_escape_string($data['solicitante']);
-$grau = $conn->real_escape_string($data['grau']);
-$descricao = $conn->real_escape_string($data['descricao']);
-$osId = isset($data['osId']) ? intval($data['osId']) : null;
+// Inicia uma transação para garantir a consistência dos dados
+$conn->begin_transaction();
 
-// Cria a solicitação de compra
-$stmt = $conn->prepare("INSERT INTO solicitacao_compras (os_id, solicitante, empresa_id, valor, status, grau, descricao, criado_em) VALUES (?, ?, ?, 0, 'Pendente', ?, ?, NOW())");
-$stmt->bind_param("isiss", $osId, $solicitante, $empresa_id, $grau, $descricao);
+try {
+    // --- MUDANÇA 2: Não existe mais um 'grau' geral, ele é por item ---
+    $solicitante = $data['solicitante'];
+    $descricao = $data['descricao'];
+    $osId = isset($data['osId']) ? intval($data['osId']) : null;
+    
+    // Insere a solicitação principal (removido o campo 'grau' daqui)
+    $stmt_sc = $conn->prepare(
+        "INSERT INTO solicitacao_compras (os_id, solicitante, empresa_id, status, descricao, criado_em) 
+         VALUES (?, ?, ?, 'Pendente', ?, NOW())"
+    );
+    $stmt_sc->bind_param("isss", $osId, $solicitante, $empresa_id, $descricao);
 
-if (!$stmt->execute()) {
-    http_response_code(500);
-    echo json_encode(["erro" => "Erro ao criar solicitação: " . $stmt->error]);
-    exit;
-}
+    if (!$stmt_sc->execute()) {
+        throw new Exception("Erro ao criar a solicitação: " . $stmt_sc->error);
+    }
+    $solicitacao_id = $stmt_sc->insert_id;
+    $stmt_sc->close();
 
-$solicitacao_id = $stmt->insert_id;
-$stmt->close();
+    // Prepara as queries para os itens
+    $stmt_item = $conn->prepare("INSERT INTO sc_item (solicitacao_id, insumo_id, quantidade, grau, und_medida) VALUES (?, ?, ?, ?, ?)");
+    $stmt_select_insumo = $conn->prepare("SELECT id FROM insumos WHERE nome = ?");
+    $stmt_insert_insumo = $conn->prepare("INSERT INTO insumos (nome) VALUES (?)");
 
-// Processa os insumos
-foreach ($data['insumos'] as $insumo) {
-    $nome = $conn->real_escape_string($insumo['insumo_nome']);
-    $quantidade = $conn->real_escape_string($insumo['insumo_quantidade']);
-    $grau_insumo = $conn->real_escape_string($insumo['insumo_grau']);
-    $unidade = isset($insumo['insumo_unidade']) ? $conn->real_escape_string($insumo['insumo_unidade']) : '';
+    // --- MUDANÇA 3: Loop corrigido para 'itens' e chaves corretas ---
+    foreach ($data['itens'] as $item) {
+        $insumo_id_final = 0;
 
-    // Verifica se o insumo já existe
-    $checkInsumo = $conn->prepare("SELECT id FROM insumos WHERE nome = ?");
-    $checkInsumo->bind_param("s", $nome);
-    $checkInsumo->execute();
-    $checkInsumo->bind_result($insumo_id);
-    if ($checkInsumo->fetch()) {
-        // insumo_id já preenchido
-        $checkInsumo->close();
-    } else {
-        $checkInsumo->close();
-        // Cria novo insumo
-        $insertInsumo = $conn->prepare("INSERT INTO insumos (nome) VALUES (?)");
-        $insertInsumo->bind_param("s", $nome);
-        if ($insertInsumo->execute()) {
-            $insumo_id = $insertInsumo->insert_id;
-        } else {
-            echo json_encode(["erro" => "Erro ao inserir insumo: " . $insertInsumo->error]);
-            exit;
+        // Lógica para obter o ID do insumo (seja novo ou existente)
+        if (!empty($item['insumo_id'])) {
+            $insumo_id_final = intval($item['insumo_id']);
+        } elseif (!empty($item['insumo_nome'])) {
+            $nome_insumo_novo = trim($item['insumo_nome']);
+
+            $stmt_select_insumo->bind_param("s", $nome_insumo_novo);
+            $stmt_select_insumo->execute();
+            $result_insumo = $stmt_select_insumo->get_result();
+
+            if ($result_insumo->num_rows > 0) {
+                $insumo_existente = $result_insumo->fetch_assoc();
+                $insumo_id_final = $insumo_existente['id'];
+            } else {
+                $stmt_insert_insumo->bind_param("s", $nome_insumo_novo);
+                if (!$stmt_insert_insumo->execute()) {
+                    throw new Exception("Erro ao criar novo insumo: " . $stmt_insert_insumo->error);
+                }
+                $insumo_id_final = $conn->insert_id;
+            }
         }
-        $insertInsumo->close();
+
+        if ($insumo_id_final <= 0) {
+            throw new Exception("ID de insumo inválido para o item '" . ($item['insumo_nome'] ?? '') . "'.");
+        }
+        
+        // Coleta os dados do item com as chaves corretas
+        $quantidade = floatval($item['quantidade']);
+        $grau_item = $item['grau'];
+        $unidade = $item['und_medida'];
+
+        // Insere o item na tabela `sc_item`
+        $stmt_item->bind_param("isdss", $solicitacao_id, $insumo_id_final, $quantidade, $grau_item, $unidade);
+        if (!$stmt_item->execute()) {
+            throw new Exception("Erro ao inserir item na solicitação: " . $stmt_item->error);
+        }
     }
 
-    // Insere item na sc_item
-    $insertItem = $conn->prepare("INSERT INTO sc_item (solicitacao_id, insumo_id, quantidade, fornecedor, grau) VALUES (?, ?, ?, '', ?)");
-    $insertItem->bind_param("iiss", $solicitacao_id, $insumo_id, $quantidade, $grau_insumo);
+    // Se tudo deu certo, confirma as operações
+    $conn->commit();
+    echo json_encode(["success" => true, "message" => "Solicitação criada com sucesso."]);
 
-    if (!$insertItem->execute()) {
-        echo json_encode(["erro" => "Erro ao inserir item da solicitação: " . $insertItem->error]);
-        exit;
-    }
+} catch (Exception $e) {
+    // Se algo deu errado, desfaz tudo
+    $conn->rollback();
+    http_response_code(500); // Internal Server Error
+    echo json_encode(["success" => false, "error" => $e->getMessage()]);
 
-    $insertItem->close();
+} finally {
+    // Fecha todos os statements abertos
+    if (isset($stmt_item)) $stmt_item->close();
+    if (isset($stmt_select_insumo)) $stmt_select_insumo->close();
+    if (isset($stmt_insert_insumo)) $stmt_insert_insumo->close();
+    $conn->close();
 }
-
-echo json_encode(["sucesso" => true, "mensagem" => "Solicitação criada com sucesso."]);
-
-$conn->close();
 ?>
